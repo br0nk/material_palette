@@ -2,10 +2,6 @@
 # These are scaffolded by `flutter create` and can be regenerated.
 android/
 ios/
-linux/
-macos/
-web/
-windows/
 .dart_tool/
 
 # Pub
