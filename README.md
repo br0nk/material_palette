@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/material_palette.svg)](https://pub.dev/packages/material_palette)
 
-A collection of **material looks implemented with shaders** for Flutter.
+A collection of **material effects** implemented with shaders for Flutter.
 
 [**Live Demo**](https://br0nk.github.io/material_palette/)
 
