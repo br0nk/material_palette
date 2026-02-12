@@ -2,11 +2,11 @@
 
 [![pub package](https://img.shields.io/pub/v/material_palette.svg)](https://pub.dev/packages/material_palette)
 
-A collection of **17 GPU-powered procedural material shader widgets** for Flutter. Drop-in shader effects including noise gradients, marble, ripples, and more.
+A collection of **material effects** implemented with shaders for Flutter.
 
 [**Live Demo**](https://br0nk.github.io/material_palette/)
 
-## Features
+## Gen1 Materials
 
 ### Gradient Fills (linear + radial variants)
 - **Gritty Gradient** - Risograph-style stippled gradient
@@ -30,9 +30,9 @@ dependencies:
   material_palette: ^0.1.0
 ```
 
-**Important:** Fragment shaders must be compiled at build time, so you need to
-declare the shaders you use in your app's `pubspec.yaml`. You can list only the
-ones you need, or include all of them:
+**Important:** Fragment shaders from packages must be declared the shaders
+you use in your app's `pubspec.yaml`. You can list only the ones you need,
+or include all of them:
 
 ```yaml
 flutter:
@@ -59,14 +59,13 @@ flutter:
     - packages/material_palette/shaders/click_ripple.frag
 ```
 
-> **Why is this needed?** Flutter compiles fragment shaders to the platform's
-> GPU format at build time. Unlike regular assets, shaders from package
-> dependencies are not automatically included — your app must explicitly declare
-> which ones to compile.
-
 ## Quick Start
 
-### ShaderFill (procedural content)
+Include the package, then add one of the following widgets to your flutter project.
+
+### ShaderFill
+
+Fills the widget area with the shader effect.
 
 ```dart
 import 'package:material_palette/material_palette.dart';
@@ -80,7 +79,9 @@ GrittyGradientShaderFill(
 )
 ```
 
-### ShaderWrap (post-processing an existing widget)
+### ShaderWrap
+
+Wraps an existing flutter widget an applies the shader effect to it.
 
 ```dart
 import 'package:material_palette/material_palette.dart';
@@ -108,9 +109,9 @@ final custom = params
 
 Every shader widget supports three animation modes:
 
-- `ShaderAnimationMode.running` - Internal ticker drives time (default)
-- `ShaderAnimationMode.static` - Frozen at time = 0
-- `ShaderAnimationMode.animation` - External `Animation<double>` drives time
+- `ShaderAnimationMode.running` - Internal ticker causes the shader to animate over time (default).
+- `ShaderAnimationMode.static` - Renders once and caches.
+- `ShaderAnimationMode.animation` - External `Animation<double>` drives the shader animation.
 
 ```dart
 GrittyGradientShaderFill(
