@@ -1,0 +1,1959 @@
+import 'package:flutter/material.dart';
+import 'package:material_palette/material_palette.dart';
+
+import 'shader_card_components.dart';
+
+// ============ CONSTANTS ============
+
+/// Background color used throughout the app
+const Color backgroundColor = Color(0xFF202329);
+
+
+/// Shader name constants, ShaderCardData, and allShaders are in shader_registry.dart.
+
+/// Asset paths for shader card images (CC0 / no attribution required)
+abstract class ShaderImageAssets {
+  static const String ripples = 'assets/images/sunset.jpg';
+  static const String taplets = 'assets/images/mountain.jpg';
+}
+
+// ============ HELPERS ============
+
+/// Responsive card dimensions helper
+class CardDimensions {
+  final double width;
+  final double height;
+  final double controlsWidth;
+
+  const CardDimensions({
+    required this.width,
+    required this.height,
+    required this.controlsWidth,
+  });
+
+  static CardDimensions of(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final availableHeight = size.height - 200; // Account for app bar, indicators, margins
+    final availableWidth = size.width;
+    
+    // Calculate dimensions based on available space
+    // Target aspect ratio of 3:5 (width:height)
+    double height = (availableHeight * 0.75).clamp(200.0, 500.0);
+    double width = (height * 0.6).clamp(150.0, 300.0);
+    
+    // Also constrain by available width
+    final maxWidthFromScreen = availableWidth * 0.7;
+    if (width > maxWidthFromScreen) {
+      width = maxWidthFromScreen;
+      height = width / 0.6;
+    }
+    
+    // Controls width should fit the card width with some margin
+    final controlsWidth = (availableWidth * 0.9).clamp(250.0, 400.0);
+    
+    return CardDimensions(
+      width: width,
+      height: height,
+      controlsWidth: controlsWidth,
+    );
+  }
+}
+
+/// Helper class for generating preset code strings
+class PresetGenerator {
+  /// Format a Color as Dart code
+  static String color(Color c) {
+    return 'Color.fromRGBO(${c.red}, ${c.green}, ${c.blue}, 1)';
+  }
+  
+  /// Format a double with reasonable precision
+  static String num(double v) {
+    // Use fewer decimals for cleaner output
+    if (v == v.roundToDouble()) {
+      return v.toStringAsFixed(1);
+    }
+    return v.toStringAsFixed(2);
+  }
+
+  /// Format a ShaderParams as Dart code
+  static String shaderParams(ShaderParams p) {
+    final sb = StringBuffer('ShaderParams(\n  values: {\n');
+    for (final e in p.values.entries) {
+      sb.writeln("    '${e.key}': ${num(e.value)},");
+    }
+    sb.write('  },\n  colors: {\n');
+    for (final e in p.colors.entries) {
+      sb.writeln("    '${e.key}': ${color(e.value)},");
+    }
+    sb.write('  },\n)');
+    return sb.toString();
+  }
+}
+
+// ============ SHADER CARD WIDGET ============
+
+/// Main shader card widget that displays shader preview with title and description
+class ShaderCard extends StatelessWidget {
+  final ShaderCardData data;
+
+  const ShaderCard({
+    super.key,
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = CardDimensions.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      // Use ScrollConfiguration to hide outer scrollbar - only controls should show scrollbar
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Shader preview - each shader handles its own clipping
+              _buildShaderPreview(dimensions),
+              const SizedBox(height: 16),
+              // Title and description
+              Text(
+                data.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                data.description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShaderPreview(CardDimensions dimensions) {
+    switch (data.title) {
+      case ShaderNames.ripples:
+        return RippleShaderCard(dimensions: dimensions);
+      case ShaderNames.taplets:
+        return ClickRippleShaderCard(dimensions: dimensions);
+      case ShaderNames.smarble:
+        return MarbleSmearShaderCard(dimensions: dimensions);
+      case ShaderNames.gritient:
+        return GrittyGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radient:
+        return RadialGrittyGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.perlin:
+        return PerlinGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radialPerlin:
+        return RadialPerlinGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.simplex:
+        return SimplexGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radialSimplex:
+        return RadialSimplexGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.fbm:
+        return FbmGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radialFbm:
+        return RadialFbmGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.turbulence:
+        return TurbulenceGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radialTurbulence:
+        return RadialTurbulenceGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.voronoi:
+        return VoronoiGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radialVoronoi:
+        return RadialVoronoiGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.voronoise:
+        return VoronoiseGradientShaderCard(dimensions: dimensions);
+      case ShaderNames.radialVoronoise:
+        return RadialVoronoiseGradientShaderCard(dimensions: dimensions);
+      default:
+        return ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: Container(color: Colors.grey.shade800),
+        );
+    }
+  }
+}
+// ============ INDIVIDUAL SHADER CARDS ============
+
+class RippleShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RippleShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RippleShaderCard> createState() => _RippleShaderCardState();
+}
+
+class _RippleShaderCardState extends State<RippleShaderCard> {
+  ShaderParams _params = rippleShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => rippleShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RippleShaderWrap(
+            backgroundColor: backgroundColor,
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.ripples,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = rippleShaderDef.defaults),
+          shaderName: 'Ripples',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Wave Properties'),
+            ControlSlider.fromRange(range: _ui['frequency']!, value: _params.get('frequency'), onChanged: (v) => setState(() => _params = _params.withValue('frequency', v))),
+            ControlSlider.fromRange(range: _ui['numWaves']!, value: _params.get('numWaves'), onChanged: (v) => setState(() => _params = _params.withValue('numWaves', v))),
+            ControlSlider.fromRange(range: _ui['amplitude']!, value: _params.get('amplitude'), onChanged: (v) => setState(() => _params = _params.withValue('amplitude', v))),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Origin 1'),
+            ControlSlider.fromRange(range: _ui['origin1X']!, value: _params.get('origin1X'), onChanged: (v) => setState(() => _params = _params.withValue('origin1X', v))),
+            ControlSlider.fromRange(range: _ui['origin1Y']!, value: _params.get('origin1Y'), onChanged: (v) => setState(() => _params = _params.withValue('origin1Y', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Origin 2'),
+            ControlSlider.fromRange(range: _ui['origin2X']!, value: _params.get('origin2X'), onChanged: (v) => setState(() => _params = _params.withValue('origin2X', v))),
+            ControlSlider.fromRange(range: _ui['origin2Y']!, value: _params.get('origin2Y'), onChanged: (v) => setState(() => _params = _params.withValue('origin2Y', v))),
+            const SizedBox(height: 12),
+            ControlSlider.fromRange(range: _ui['originScale']!, value: _params.get('originScale'), onChanged: (v) => setState(() => _params = _params.withValue('originScale', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class ClickRippleShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const ClickRippleShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<ClickRippleShaderCard> createState() => _ClickRippleShaderCardState();
+}
+
+class _ClickRippleShaderCardState extends State<ClickRippleShaderCard> {
+  ShaderParams _params = clickRippleShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => clickRippleShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: ClickableRippleShaderWrap(
+            backgroundColor: backgroundColor,
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.taplets,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = clickRippleShaderDef.defaults),
+          shaderName: 'Taplets',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Ripple Properties'),
+            ControlSlider.fromRange(range: _ui['amplitude']!, value: _params.get('amplitude'), onChanged: (v) => setState(() => _params = _params.withValue('amplitude', v))),
+            ControlSlider.fromRange(range: _ui['frequency']!, value: _params.get('frequency'), onChanged: (v) => setState(() => _params = _params.withValue('frequency', v))),
+            ControlSlider.fromRange(range: _ui['decay']!, value: _params.get('decay'), onChanged: (v) => setState(() => _params = _params.withValue('decay', v))),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['rippleLifetime']!, value: _params.get('rippleLifetime'), onChanged: (v) => setState(() => _params = _params.withValue('rippleLifetime', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class MarbleSmearShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const MarbleSmearShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<MarbleSmearShaderCard> createState() => _MarbleSmearShaderCardState();
+}
+
+class _MarbleSmearShaderCardState extends State<MarbleSmearShaderCard> {
+  ShaderParams _params = marbleSmearShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => marbleSmearShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: MarbleSmearShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            backgroundColor: backgroundColor,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = marbleSmearShaderDef.defaults),
+          shaderName: 'Smarble',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Domain Warping'),
+            ControlSlider.fromRange(range: _ui['warp1Scale']!, value: _params.get('warp1Scale'), onChanged: (v) => setState(() => _params = _params.withValue('warp1Scale', v))),
+            ControlSlider.fromRange(range: _ui['warp2Scale']!, value: _params.get('warp2Scale'), onChanged: (v) => setState(() => _params = _params.withValue('warp2Scale', v))),
+            ControlSlider.fromRange(range: _ui['finalScale']!, value: _params.get('finalScale'), onChanged: (v) => setState(() => _params = _params.withValue('finalScale', v))),
+            ControlSlider.fromRange(range: _ui['warpStrength']!, value: _params.get('warpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('warpStrength', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Contrast'),
+            ControlSlider.fromRange(range: _ui['contrastPower']!, value: _params.get('contrastPower'), onChanged: (v) => setState(() => _params = _params.withValue('contrastPower', v))),
+            ControlSlider.fromRange(range: _ui['finalContrast']!, value: _params.get('finalContrast'), onChanged: (v) => setState(() => _params = _params.withValue('finalContrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeedInputX']!, value: _params.get('animSpeedInputX'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeedInputX', v))),
+            ControlSlider.fromRange(range: _ui['animSpeedInputY']!, value: _params.get('animSpeedInputY'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeedInputY', v))),
+            ControlSlider.fromRange(range: _ui['animAmpInput']!, value: _params.get('animAmpInput'), onChanged: (v) => setState(() => _params = _params.withValue('animAmpInput', v))),
+            ControlSlider.fromRange(range: _ui['animAmpWarp']!, value: _params.get('animAmpWarp'), onChanged: (v) => setState(() => _params = _params.withValue('animAmpWarp', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Color Palette'),
+            ControlColorPicker(label: 'Cream', color: _params.getColor('colorCream'), onChanged: (c) => setState(() => _params = _params.withColor('colorCream', c)), palette: ShaderColorPalette.marble),
+            ControlColorPicker(label: 'Tan', color: _params.getColor('colorTan'), onChanged: (c) => setState(() => _params = _params.withColor('colorTan', c)), palette: ShaderColorPalette.marble),
+            ControlColorPicker(label: 'Brown', color: _params.getColor('colorBrown'), onChanged: (c) => setState(() => _params = _params.withColor('colorBrown', c)), palette: ShaderColorPalette.marble),
+            ControlColorPicker(label: 'Teal', color: _params.getColor('colorTeal'), onChanged: (c) => setState(() => _params = _params.withColor('colorTeal', c)), palette: ShaderColorPalette.marble),
+            ControlColorPicker(label: 'Dark', color: _params.getColor('colorDark'), onChanged: (c) => setState(() => _params = _params.withColor('colorDark', c)), palette: ShaderColorPalette.marble),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightAmbient']!, value: _params.get('lightAmbient'), onChanged: (v) => setState(() => _params = _params.withValue('lightAmbient', v))),
+            ControlSlider.fromRange(range: _ui['lightDiffuse']!, value: _params.get('lightDiffuse'), onChanged: (v) => setState(() => _params = _params.withValue('lightDiffuse', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Smudge Effect'),
+            ControlSlider.fromRange(range: _ui['smudgeRadius']!, value: _params.get('smudgeRadius'), onChanged: (v) => setState(() => _params = _params.withValue('smudgeRadius', v))),
+            ControlSlider.fromRange(range: _ui['smudgeStrength']!, value: _params.get('smudgeStrength'), onChanged: (v) => setState(() => _params = _params.withValue('smudgeStrength', v))),
+            ControlSlider.fromRange(range: _ui['smudgeFalloff']!, value: _params.get('smudgeFalloff'), onChanged: (v) => setState(() => _params = _params.withValue('smudgeFalloff', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+class GrittyGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const GrittyGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<GrittyGradientShaderCard> createState() => _GrittyGradientShaderCardState();
+}
+
+class _GrittyGradientShaderCardState extends State<GrittyGradientShaderCard> {
+  ShaderParams _params = grittyGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => grittyGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: GrittyGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = grittyGradientDef.defaults),
+          shaderName: 'Grit',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Noise'),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.gradient),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.gradient),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.gradient),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialGrittyGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialGrittyGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialGrittyGradientShaderCard> createState() =>
+      _RadialGrittyGradientShaderCardState();
+}
+
+class _RadialGrittyGradientShaderCardState
+    extends State<RadialGrittyGradientShaderCard> {
+  ShaderParams _params = radialGrittyGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialGrittyGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialGrittyGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(
+              () => _params = radialGrittyGradientDef.defaults),
+          shaderName: 'Grit Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(
+              range: _ui['gradientCenterX']!,
+              value: _params.get('gradientCenterX'),
+              onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v)),
+            ),
+            ControlSlider.fromRange(
+              range: _ui['gradientCenterY']!,
+              value: _params.get('gradientCenterY'),
+              onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v)),
+            ),
+            ControlSlider.fromRange(
+              range: _ui['gradientScale']!,
+              value: _params.get('gradientScale'),
+              onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v)),
+            ),
+            ControlSlider.fromRange(
+              range: _ui['gradientOffset']!,
+              value: _params.get('gradientOffset'),
+              onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Noise'),
+            ControlSlider.fromRange(
+              range: _ui['noiseDensity']!,
+              value: _params.get('noiseDensity'),
+              onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v)),
+            ),
+            ControlSlider.fromRange(
+              range: _ui['noiseIntensity']!,
+              value: _params.get('noiseIntensity'),
+              onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v)),
+            ),
+            ControlSlider.fromRange(
+              range: _ui['ditherStrength']!,
+              value: _params.get('ditherStrength'),
+              onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(
+              range: _ui['animSpeed']!,
+              value: _params.get('animSpeed'),
+              onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(
+              label: 'Center',
+              color: _params.getColor('colorA'),
+              onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)),
+              palette: ShaderColorPalette.radialGradient,
+            ),
+            ControlColorPicker(
+              label: 'Edge',
+              color: _params.getColor('colorB'),
+              onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)),
+              palette: ShaderColorPalette.radialGradient,
+            ),
+            ControlColorPicker(
+              label: 'Mid',
+              color: _params.getColor('colorMid'),
+              onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)),
+              palette: ShaderColorPalette.radialGradient,
+            ),
+            ControlSlider.fromRange(
+              range: _ui['midPosition']!,
+              value: _params.get('midPosition'),
+              onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(
+              range: _ui['exposure']!,
+              value: _params.get('exposure'),
+              onChanged: (v) => setState(() => _params = _params.withValue('exposure', v)),
+            ),
+            ControlSlider.fromRange(
+              range: _ui['contrast']!,
+              value: _params.get('contrast'),
+              onChanged: (v) => setState(() => _params = _params.withValue('contrast', v)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+// ============ PERLIN GRADIENT SHADER CARDS ============
+
+class PerlinGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const PerlinGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<PerlinGradientShaderCard> createState() => _PerlinGradientShaderCardState();
+}
+
+class _PerlinGradientShaderCardState extends State<PerlinGradientShaderCard> {
+  ShaderParams _params = perlinGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => perlinGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: PerlinGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = perlinGradientDef.defaults),
+          shaderName: 'Perlin',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Perlin Noise'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseContrast']!, value: _params.get('noiseContrast'), onChanged: (v) => setState(() => _params = _params.withValue('noiseContrast', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.perlin),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.perlin),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.perlin),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialPerlinGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialPerlinGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialPerlinGradientShaderCard> createState() => _RadialPerlinGradientShaderCardState();
+}
+
+class _RadialPerlinGradientShaderCardState extends State<RadialPerlinGradientShaderCard> {
+  ShaderParams _params = radialPerlinGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialPerlinGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialPerlinGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialPerlinGradientDef.defaults),
+          shaderName: 'Perlin Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientCenterX']!, value: _params.get('gradientCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v))),
+            ControlSlider.fromRange(range: _ui['gradientCenterY']!, value: _params.get('gradientCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Perlin Noise'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseContrast']!, value: _params.get('noiseContrast'), onChanged: (v) => setState(() => _params = _params.withValue('noiseContrast', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Center', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.perlin),
+            ControlColorPicker(label: 'Edge', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.perlin),
+            ControlColorPicker(label: 'Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.perlin),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+// ============ SIMPLEX GRADIENT SHADER CARDS ============
+
+class SimplexGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const SimplexGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<SimplexGradientShaderCard> createState() => _SimplexGradientShaderCardState();
+}
+
+class _SimplexGradientShaderCardState extends State<SimplexGradientShaderCard> {
+  ShaderParams _params = simplexGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => simplexGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: SimplexGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = simplexGradientDef.defaults),
+          shaderName: 'Simplex',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Simplex Noise'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['sharpness']!, value: _params.get('sharpness'), onChanged: (v) => setState(() => _params = _params.withValue('sharpness', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.simplex),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.simplex),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.simplex),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialSimplexGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialSimplexGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialSimplexGradientShaderCard> createState() => _RadialSimplexGradientShaderCardState();
+}
+
+class _RadialSimplexGradientShaderCardState extends State<RadialSimplexGradientShaderCard> {
+  ShaderParams _params = radialSimplexGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialSimplexGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialSimplexGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialSimplexGradientDef.defaults),
+          shaderName: 'Simplex Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientCenterX']!, value: _params.get('gradientCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v))),
+            ControlSlider.fromRange(range: _ui['gradientCenterY']!, value: _params.get('gradientCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Simplex Noise'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['sharpness']!, value: _params.get('sharpness'), onChanged: (v) => setState(() => _params = _params.withValue('sharpness', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Center', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.simplex),
+            ControlColorPicker(label: 'Edge', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.simplex),
+            ControlColorPicker(label: 'Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.simplex),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+// ============ FBM GRADIENT SHADER CARDS ============
+
+class FbmGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const FbmGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<FbmGradientShaderCard> createState() => _FbmGradientShaderCardState();
+}
+
+class _FbmGradientShaderCardState extends State<FbmGradientShaderCard> {
+  ShaderParams _params = fbmGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => fbmGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: FbmGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = fbmGradientDef.defaults),
+          shaderName: 'FBM',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('FBM Noise'),
+            ControlSlider.fromRange(range: _ui['octaves']!, value: _params.get('octaves'), onChanged: (v) => setState(() => _params = _params.withValue('octaves', v))),
+            ControlSlider.fromRange(range: _ui['lacunarity']!, value: _params.get('lacunarity'), onChanged: (v) => setState(() => _params = _params.withValue('lacunarity', v))),
+            ControlSlider.fromRange(range: _ui['persistence']!, value: _params.get('persistence'), onChanged: (v) => setState(() => _params = _params.withValue('persistence', v))),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.fbm),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.fbm),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.fbm),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialFbmGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialFbmGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialFbmGradientShaderCard> createState() => _RadialFbmGradientShaderCardState();
+}
+
+class _RadialFbmGradientShaderCardState extends State<RadialFbmGradientShaderCard> {
+  ShaderParams _params = radialFbmGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialFbmGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialFbmGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialFbmGradientDef.defaults),
+          shaderName: 'FBM Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientCenterX']!, value: _params.get('gradientCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v))),
+            ControlSlider.fromRange(range: _ui['gradientCenterY']!, value: _params.get('gradientCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('FBM Noise'),
+            ControlSlider.fromRange(range: _ui['octaves']!, value: _params.get('octaves'), onChanged: (v) => setState(() => _params = _params.withValue('octaves', v))),
+            ControlSlider.fromRange(range: _ui['lacunarity']!, value: _params.get('lacunarity'), onChanged: (v) => setState(() => _params = _params.withValue('lacunarity', v))),
+            ControlSlider.fromRange(range: _ui['persistence']!, value: _params.get('persistence'), onChanged: (v) => setState(() => _params = _params.withValue('persistence', v))),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Center', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.fbm),
+            ControlColorPicker(label: 'Edge', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.fbm),
+            ControlColorPicker(label: 'Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.fbm),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+// ============ TURBULENCE GRADIENT SHADER CARDS ============
+class TurbulenceGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const TurbulenceGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<TurbulenceGradientShaderCard> createState() => _TurbulenceGradientShaderCardState();
+}
+
+class _TurbulenceGradientShaderCardState extends State<TurbulenceGradientShaderCard> {
+  ShaderParams _params = turbulenceGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => turbulenceGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: TurbulenceGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = turbulenceGradientDef.defaults),
+          shaderName: 'Turbulence',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Turbulence Noise'),
+            ControlSlider.fromRange(range: _ui['octaves']!, value: _params.get('octaves'), onChanged: (v) => setState(() => _params = _params.withValue('octaves', v))),
+            ControlSlider.fromRange(range: _ui['baseFrequency']!, value: _params.get('baseFrequency'), onChanged: (v) => setState(() => _params = _params.withValue('baseFrequency', v))),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.turbulence),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.turbulence),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.turbulence),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialTurbulenceGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialTurbulenceGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialTurbulenceGradientShaderCard> createState() => _RadialTurbulenceGradientShaderCardState();
+}
+
+class _RadialTurbulenceGradientShaderCardState extends State<RadialTurbulenceGradientShaderCard> {
+  ShaderParams _params = radialTurbulenceGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialTurbulenceGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialTurbulenceGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialTurbulenceGradientDef.defaults),
+          shaderName: 'Turbulence Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientCenterX']!, value: _params.get('gradientCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v))),
+            ControlSlider.fromRange(range: _ui['gradientCenterY']!, value: _params.get('gradientCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Turbulence Noise'),
+            ControlSlider.fromRange(range: _ui['octaves']!, value: _params.get('octaves'), onChanged: (v) => setState(() => _params = _params.withValue('octaves', v))),
+            ControlSlider.fromRange(range: _ui['baseFrequency']!, value: _params.get('baseFrequency'), onChanged: (v) => setState(() => _params = _params.withValue('baseFrequency', v))),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Center', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.turbulence),
+            ControlColorPicker(label: 'Edge', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.turbulence),
+            ControlColorPicker(label: 'Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.turbulence),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+// ============ VORONOI GRADIENT SHADER CARDS ============
+
+class VoronoiGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const VoronoiGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<VoronoiGradientShaderCard> createState() => _VoronoiGradientShaderCardState();
+}
+
+class _VoronoiGradientShaderCardState extends State<VoronoiGradientShaderCard> {
+  ShaderParams _params = voronoiGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => voronoiGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: VoronoiGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = voronoiGradientDef.defaults),
+          shaderName: 'Voronoi',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Voronoi Noise'),
+            ControlSlider.fromRange(range: _ui['cellScale']!, value: _params.get('cellScale'), onChanged: (v) => setState(() => _params = _params.withValue('cellScale', v))),
+            ControlSlider.fromRange(range: _ui['cellJitter']!, value: _params.get('cellJitter'), onChanged: (v) => setState(() => _params = _params.withValue('cellJitter', v))),
+            ControlSlider.fromRange(range: _ui['distanceType']!, value: _params.get('distanceType'), onChanged: (v) => setState(() => _params = _params.withValue('distanceType', v))),
+            ControlSlider.fromRange(range: _ui['outputMode']!, value: _params.get('outputMode'), onChanged: (v) => setState(() => _params = _params.withValue('outputMode', v))),
+            ControlSlider.fromRange(range: _ui['cellSmoothness']!, value: _params.get('cellSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('cellSmoothness', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.voronoi),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.voronoi),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.voronoi),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialVoronoiGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialVoronoiGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialVoronoiGradientShaderCard> createState() => _RadialVoronoiGradientShaderCardState();
+}
+
+class _RadialVoronoiGradientShaderCardState extends State<RadialVoronoiGradientShaderCard> {
+  ShaderParams _params = radialVoronoiGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialVoronoiGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialVoronoiGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialVoronoiGradientDef.defaults),
+          shaderName: 'Voronoi Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientCenterX']!, value: _params.get('gradientCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v))),
+            ControlSlider.fromRange(range: _ui['gradientCenterY']!, value: _params.get('gradientCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Voronoi Noise'),
+            ControlSlider.fromRange(range: _ui['cellScale']!, value: _params.get('cellScale'), onChanged: (v) => setState(() => _params = _params.withValue('cellScale', v))),
+            ControlSlider.fromRange(range: _ui['cellJitter']!, value: _params.get('cellJitter'), onChanged: (v) => setState(() => _params = _params.withValue('cellJitter', v))),
+            ControlSlider.fromRange(range: _ui['distanceType']!, value: _params.get('distanceType'), onChanged: (v) => setState(() => _params = _params.withValue('distanceType', v))),
+            ControlSlider.fromRange(range: _ui['outputMode']!, value: _params.get('outputMode'), onChanged: (v) => setState(() => _params = _params.withValue('outputMode', v))),
+            ControlSlider.fromRange(range: _ui['cellSmoothness']!, value: _params.get('cellSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('cellSmoothness', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Center', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.voronoi),
+            ControlColorPicker(label: 'Edge', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.voronoi),
+            ControlColorPicker(label: 'Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.voronoi),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+// ============ VORONOISE GRADIENT SHADER CARDS ============
+
+class VoronoiseGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const VoronoiseGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<VoronoiseGradientShaderCard> createState() => _VoronoiseGradientShaderCardState();
+}
+
+class _VoronoiseGradientShaderCardState extends State<VoronoiseGradientShaderCard> {
+  ShaderParams _params = voronoiseGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => voronoiseGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: VoronoiseGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = voronoiseGradientDef.defaults),
+          shaderName: 'Voronoise',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientAngle']!, value: _params.get('gradientAngle'), onChanged: (v) => setState(() => _params = _params.withValue('gradientAngle', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Voronoise'),
+            ControlSlider.fromRange(range: _ui['cellScale']!, value: _params.get('cellScale'), onChanged: (v) => setState(() => _params = _params.withValue('cellScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseBlend']!, value: _params.get('noiseBlend'), onChanged: (v) => setState(() => _params = _params.withValue('noiseBlend', v))),
+            ControlSlider.fromRange(range: _ui['edgeSmoothness']!, value: _params.get('edgeSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('edgeSmoothness', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Color A', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.voronoise),
+            ControlColorPicker(label: 'Color B', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.voronoise),
+            ControlColorPicker(label: 'Color Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.voronoise),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialVoronoiseGradientShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialVoronoiseGradientShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialVoronoiseGradientShaderCard> createState() => _RadialVoronoiseGradientShaderCardState();
+}
+
+class _RadialVoronoiseGradientShaderCardState extends State<RadialVoronoiseGradientShaderCard> {
+  ShaderParams _params = radialVoronoiseGradientDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialVoronoiseGradientDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialVoronoiseGradientShaderFill(
+            width: dimensions.width,
+            height: dimensions.height,
+            params: _params,
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialVoronoiseGradientDef.defaults),
+          shaderName: 'Voronoise Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Gradient'),
+            ControlSlider.fromRange(range: _ui['gradientCenterX']!, value: _params.get('gradientCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterX', v))),
+            ControlSlider.fromRange(range: _ui['gradientCenterY']!, value: _params.get('gradientCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('gradientCenterY', v))),
+            ControlSlider.fromRange(range: _ui['gradientScale']!, value: _params.get('gradientScale'), onChanged: (v) => setState(() => _params = _params.withValue('gradientScale', v))),
+            ControlSlider.fromRange(range: _ui['gradientOffset']!, value: _params.get('gradientOffset'), onChanged: (v) => setState(() => _params = _params.withValue('gradientOffset', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Voronoise'),
+            ControlSlider.fromRange(range: _ui['cellScale']!, value: _params.get('cellScale'), onChanged: (v) => setState(() => _params = _params.withValue('cellScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseBlend']!, value: _params.get('noiseBlend'), onChanged: (v) => setState(() => _params = _params.withValue('noiseBlend', v))),
+            ControlSlider.fromRange(range: _ui['edgeSmoothness']!, value: _params.get('edgeSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('edgeSmoothness', v))),
+            ControlSlider.fromRange(range: _ui['noiseDensity']!, value: _params.get('noiseDensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseDensity', v))),
+            ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
+            ControlSegmentedButton<double>(
+              label: 'Fade Mode',
+              value: _params.get('edgeFadeMode'),
+              options: const [
+                (0.0, 'Both'),
+                (1.0, 'Start'),
+                (2.0, 'End'),
+              ],
+              onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
+            ),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Animation'),
+            ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Colors'),
+            ColorSchemeGeneratorWidget(
+              initialColorA: _params.getColor('colorA'),
+              initialColorB: _params.getColor('colorB'),
+              initialColorMid: _params.getColor('colorMid'),
+              onColorsChanged: (a, b, mid) => setState(() {
+                _params = _params.withColor('colorA', a).withColor('colorB', b).withColor('colorMid', mid);
+              }),
+              labelA: 'Center',
+              labelB: 'Edge',
+              labelMid: 'Mid',
+            ),
+            const SizedBox(height: 8),
+            ControlColorPicker(label: 'Center', color: _params.getColor('colorA'), onChanged: (c) => setState(() => _params = _params.withColor('colorA', c)), palette: ShaderColorPalette.voronoise),
+            ControlColorPicker(label: 'Edge', color: _params.getColor('colorB'), onChanged: (c) => setState(() => _params = _params.withColor('colorB', c)), palette: ShaderColorPalette.voronoise),
+            ControlColorPicker(label: 'Mid', color: _params.getColor('colorMid'), onChanged: (c) => setState(() => _params = _params.withColor('colorMid', c)), palette: ShaderColorPalette.voronoise),
+            ControlSlider.fromRange(range: _ui['midPosition']!, value: _params.get('midPosition'), onChanged: (v) => setState(() => _params = _params.withValue('midPosition', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Post-Processing'),
+            ControlSlider.fromRange(range: _ui['exposure']!, value: _params.get('exposure'), onChanged: (v) => setState(() => _params = _params.withValue('exposure', v))),
+            ControlSlider.fromRange(range: _ui['contrast']!, value: _params.get('contrast'), onChanged: (v) => setState(() => _params = _params.withValue('contrast', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Lighting'),
+            ControlSlider.fromRange(range: _ui['bumpStrength']!, value: _params.get('bumpStrength'), onChanged: (v) => setState(() => _params = _params.withValue('bumpStrength', v))),
+            ControlSlider.fromRange(range: _ui['lightDirX']!, value: _params.get('lightDirX'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirX', v))),
+            ControlSlider.fromRange(range: _ui['lightDirY']!, value: _params.get('lightDirY'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirY', v))),
+            ControlSlider.fromRange(range: _ui['lightDirZ']!, value: _params.get('lightDirZ'), onChanged: (v) => setState(() => _params = _params.withValue('lightDirZ', v))),
+            ControlSlider.fromRange(range: _ui['lightIntensity']!, value: _params.get('lightIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('lightIntensity', v))),
+            ControlSlider.fromRange(range: _ui['ambient']!, value: _params.get('ambient'), onChanged: (v) => setState(() => _params = _params.withValue('ambient', v))),
+            ControlSlider.fromRange(range: _ui['specular']!, value: _params.get('specular'), onChanged: (v) => setState(() => _params = _params.withValue('specular', v))),
+            ControlSlider.fromRange(range: _ui['shininess']!, value: _params.get('shininess'), onChanged: (v) => setState(() => _params = _params.withValue('shininess', v))),
+            ControlSlider.fromRange(range: _ui['metallic']!, value: _params.get('metallic'), onChanged: (v) => setState(() => _params = _params.withValue('metallic', v))),
+            ControlSlider.fromRange(range: _ui['roughness']!, value: _params.get('roughness'), onChanged: (v) => setState(() => _params = _params.withValue('roughness', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+

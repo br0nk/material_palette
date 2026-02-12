@@ -1,0 +1,42 @@
+name: material_palette_example
+description: Demo app for the material_palette package.
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_palette:
+    path: ../
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+  shaders:
+    - packages/material_palette/shaders/ripple.frag
+    - packages/material_palette/shaders/click_ripple.frag
+    - packages/material_palette/shaders/marble_smear.frag
+    - packages/material_palette/shaders/gritty_gradient.frag
+    - packages/material_palette/shaders/radial_gritty_gradient.frag
+    - packages/material_palette/shaders/perlin_gradient.frag
+    - packages/material_palette/shaders/radial_perlin_gradient.frag
+    - packages/material_palette/shaders/simplex_gradient.frag
+    - packages/material_palette/shaders/radial_simplex_gradient.frag
+    - packages/material_palette/shaders/fbm_gradient.frag
+    - packages/material_palette/shaders/radial_fbm_gradient.frag
+    - packages/material_palette/shaders/turbulence_gradient.frag
+    - packages/material_palette/shaders/radial_turbulence_gradient.frag
+    - packages/material_palette/shaders/voronoi_gradient.frag
+    - packages/material_palette/shaders/radial_voronoi_gradient.frag
+    - packages/material_palette/shaders/voronoise_gradient.frag
+    - packages/material_palette/shaders/radial_voronoise_gradient.frag

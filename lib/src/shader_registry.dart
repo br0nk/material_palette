@@ -1,0 +1,107 @@
+export 'shader_params.dart' show ShaderParams, ShaderUIDefaults;
+export 'shader_types.dart' show SliderRange;
+export 'shader_definitions.dart';
+
+/// Shader name constants
+abstract class ShaderNames {
+  static const String ripples = 'Ripples';
+  static const String taplets = 'Taplets';
+  static const String smarble = 'Smarble';
+  static const String gritient = 'Grit';
+  static const String radient = 'Grit Radial';
+  static const String perlin = 'Perlin';
+  static const String radialPerlin = 'Perlin Radial';
+  static const String simplex = 'Simplex';
+  static const String radialSimplex = 'Simplex Radial';
+  static const String fbm = 'FBM';
+  static const String radialFbm = 'FBM Radial';
+  static const String turbulence = 'Turbulence';
+  static const String radialTurbulence = 'Turbulence Radial';
+  static const String voronoi = 'Voronoi';
+  static const String radialVoronoi = 'Voronoi Radial';
+  static const String voronoise = 'Voronoise';
+  static const String radialVoronoise = 'Voronoise Radial';
+}
+
+/// Data for a shader card
+class ShaderCardData {
+  final String title;
+  final String description;
+
+  const ShaderCardData({
+    required this.title,
+    required this.description,
+  });
+}
+
+/// All available shaders
+const List<ShaderCardData> allShaders = [
+  ShaderCardData(
+    title: ShaderNames.ripples,
+    description: 'Animated ripple distortion effect',
+  ),
+  ShaderCardData(
+    title: ShaderNames.taplets,
+    description: 'Tap to create ripple effects',
+  ),
+  ShaderCardData(
+    title: ShaderNames.smarble,
+    description: 'Marble pattern with drag smudge',
+  ),
+  ShaderCardData(
+    title: ShaderNames.gritient,
+    description: 'Risograph-style stippled gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radient,
+    description: 'Radial stippled gradient effect',
+  ),
+  ShaderCardData(
+    title: ShaderNames.perlin,
+    description: 'Classic Perlin noise gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialPerlin,
+    description: 'Radial Perlin noise gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.simplex,
+    description: 'Simplex noise with fewer artifacts',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialSimplex,
+    description: 'Radial Simplex noise gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.fbm,
+    description: 'Fractional Brownian Motion layers',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialFbm,
+    description: 'Radial FBM noise gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.turbulence,
+    description: 'Turbulent ridge-like patterns',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialTurbulence,
+    description: 'Radial turbulence gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.voronoi,
+    description: 'Cellular Voronoi noise pattern',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialVoronoi,
+    description: 'Radial Voronoi cell gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.voronoise,
+    description: 'Blend of Voronoi and noise',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialVoronoise,
+    description: 'Radial Voronoise gradient',
+  ),
+];
