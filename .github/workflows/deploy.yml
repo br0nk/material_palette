@@ -1,3 +1,4 @@
+# Deployed on push to main
 name: Deploy example to GitHub Pages
 
 on:
