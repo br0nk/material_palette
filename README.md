@@ -61,6 +61,8 @@ flutter:
 
 ## Quick Start
 
+Include the package, then add one of the following widgets to your flutter project.
+
 ### ShaderFill
 
 Fills the widget area with the shader effect.
