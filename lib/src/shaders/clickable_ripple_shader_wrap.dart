@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
-import '../shader_wrap.dart';
-import '../shader_params.dart';
-import '../shader_definitions.dart';
+import 'package:material_palette/src/shader_wrap.dart';
+import 'package:material_palette/src/shader_params.dart';
+import 'package:material_palette/src/shader_definitions.dart';
 
 /// A shader wrapper that applies a click/touch-triggered ripple effect.
 class ClickableRippleShaderWrap extends StatefulWidget {
@@ -98,9 +98,9 @@ class _ClickableRippleShaderWrapState
         uniforms.setFloat(p.get('speed'));
 
         // Background color
-        uniforms.setFloat(bgColor.red / 255.0);
-        uniforms.setFloat(bgColor.green / 255.0);
-        uniforms.setFloat(bgColor.blue / 255.0);
+        uniforms.setFloat(bgColor.r);
+        uniforms.setFloat(bgColor.g);
+        uniforms.setFloat(bgColor.b);
       },
       backgroundColor: widget.backgroundColor,
       animationMode: widget.animationMode,

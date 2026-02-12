@@ -1,8 +1,8 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'shader_params.dart';
-import 'shader_definitions.dart';
+import 'package:material_palette/src/shader_params.dart';
+import 'package:material_palette/src/shader_definitions.dart';
 
 /// All available shader material types for the shape builder.
 /// Excludes MarbleSmear (which requires interactive state).

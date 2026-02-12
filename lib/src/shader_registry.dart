@@ -1,6 +1,6 @@
-export 'shader_params.dart' show ShaderParams, ShaderUIDefaults;
-export 'shader_types.dart' show SliderRange;
-export 'shader_definitions.dart';
+export 'package:material_palette/src/shader_params.dart' show ShaderParams, ShaderUIDefaults;
+export 'package:material_palette/src/shader_types.dart' show SliderRange;
+export 'package:material_palette/src/shader_definitions.dart';
 
 /// Shader name constants
 abstract class ShaderNames {

@@ -63,7 +63,7 @@ class CardDimensions {
 class PresetGenerator {
   /// Format a Color as Dart code
   static String color(Color c) {
-    return 'Color.fromRGBO(${c.red}, ${c.green}, ${c.blue}, 1)';
+    return 'Color.fromRGBO(${(c.r * 255.0).round().clamp(0, 255)}, ${(c.g * 255.0).round().clamp(0, 255)}, ${(c.b * 255.0).round().clamp(0, 255)}, 1)';
   }
   
   /// Format a double with reasonable precision

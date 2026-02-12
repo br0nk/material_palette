@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
-import 'shader_types.dart';
+import 'package:material_palette/src/shader_types.dart';
 
-export 'shader_types.dart';
+export 'package:material_palette/src/shader_types.dart';
 
 /// Callback for setting shader uniforms on a fill (procedural) shader.
 /// Receives the [FragmentShader], current [Size], and elapsed [time] in seconds.

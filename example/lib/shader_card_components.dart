@@ -444,7 +444,10 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
   Color get _currentColor => HSLColor.fromAHSL(1.0, _hue, _saturation, _lightness).toColor();
 
   String _colorToHex(Color color) {
-    return '#${color.red.toRadixString(16).padLeft(2, '0')}${color.green.toRadixString(16).padLeft(2, '0')}${color.blue.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    final r = (color.r * 255.0).round().clamp(0, 255);
+    final g = (color.g * 255.0).round().clamp(0, 255);
+    final b = (color.b * 255.0).round().clamp(0, 255);
+    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
   }
 
   Color? _hexToColor(String hex) {
@@ -709,10 +712,10 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
 
   /// Check if two colors are visually close (within tolerance)
   bool _colorsAreClose(Color a, Color b) {
-    const tolerance = 5;
-    return (a.red - b.red).abs() < tolerance &&
-           (a.green - b.green).abs() < tolerance &&
-           (a.blue - b.blue).abs() < tolerance;
+    const tolerance = 5.0 / 255.0;
+    return (a.r - b.r).abs() < tolerance &&
+           (a.g - b.g).abs() < tolerance &&
+           (a.b - b.b).abs() < tolerance;
   }
 }
 
@@ -906,7 +909,10 @@ class _ColorSchemeGeneratorWidgetState extends State<ColorSchemeGeneratorWidget>
   }
 
   String _colorToHex(Color color) {
-    return '#${color.red.toRadixString(16).padLeft(2, '0')}${color.green.toRadixString(16).padLeft(2, '0')}${color.blue.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    final r = (color.r * 255.0).round().clamp(0, 255);
+    final g = (color.g * 255.0).round().clamp(0, 255);
+    final b = (color.b * 255.0).round().clamp(0, 255);
+    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
   }
 
   @override

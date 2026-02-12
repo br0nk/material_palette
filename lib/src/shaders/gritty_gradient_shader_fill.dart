@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
-import '../shader_fill.dart';
-import '../shader_params.dart';
-import '../shader_definitions.dart';
+import 'package:material_palette/src/shader_fill.dart';
+import 'package:material_palette/src/shader_params.dart';
+import 'package:material_palette/src/shader_definitions.dart';
 
 /// A shader wrapper that renders an animated gritty gradient effect.
 class GrittyGradientShaderFill extends StatelessWidget {

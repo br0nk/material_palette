@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
-import '../shader_wrap.dart';
-import '../shader_params.dart';
-import '../shader_definitions.dart';
+import 'package:material_palette/src/shader_wrap.dart';
+import 'package:material_palette/src/shader_params.dart';
+import 'package:material_palette/src/shader_definitions.dart';
 
 /// A shader wrapper that applies a time-based ripple effect to its child.
 class RippleShaderWrap extends StatelessWidget {
@@ -49,9 +49,9 @@ class RippleShaderWrap extends StatelessWidget {
         uniforms
           ..setSize(size)
           ..setFloat(time)
-          ..setFloat(bgColor.red / 255.0)
-          ..setFloat(bgColor.green / 255.0)
-          ..setFloat(bgColor.blue / 255.0)
+          ..setFloat(bgColor.r)
+          ..setFloat(bgColor.g)
+          ..setFloat(bgColor.b)
           ..setFloat(o1.dx)
           ..setFloat(o1.dy)
           ..setFloat(o2.dx)

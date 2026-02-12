@@ -1,7 +1,7 @@
 import 'dart:ui' as ui show FragmentShader;
 
 import 'package:flutter/material.dart';
-import 'shader_types.dart';
+import 'package:material_palette/src/shader_types.dart';
 
 // ── Core param container ─────────────────────────────────────────────────────
 
@@ -57,7 +57,10 @@ class ShaderParams {
   }
 
   static String _colorToHex(Color color) {
-    return '#${color.red.toRadixString(16).padLeft(2, '0')}${color.green.toRadixString(16).padLeft(2, '0')}${color.blue.toRadixString(16).padLeft(2, '0')}'
+    final r = (color.r * 255.0).round().clamp(0, 255);
+    final g = (color.g * 255.0).round().clamp(0, 255);
+    final b = (color.b * 255.0).round().clamp(0, 255);
+    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'
         .toUpperCase();
   }
 }

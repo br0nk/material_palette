@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'shader_params.dart';
-import 'shader_registry.dart';
-import 'shader_types.dart';
-import 'shader_material.dart';
+import 'package:material_palette/src/shader_params.dart';
+import 'package:material_palette/src/shader_registry.dart';
+import 'package:material_palette/src/shader_material.dart';
 
 /// Bundles layout + defaults + uiDefaults for one shader.
 class ShaderDefinition {

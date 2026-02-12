@@ -10,7 +10,7 @@ enum ShaderAnimationMode {
   /// Internal ticker drives time automatically (current default behavior).
   running,
 
-  /// External Animation<double> drives time. Widget listens to it internally.
+  /// External `Animation<double>` drives time. Widget listens to it internally.
   animation,
 }
 
