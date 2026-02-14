@@ -17,7 +17,7 @@ class RippleShaderWrap extends StatelessWidget {
   }) : params = params ?? rippleShaderDef.defaults;
 
   final Widget child;
-  final Color? backgroundColor;
+  final Color backgroundColor;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
   final Animation<double>? animation;
@@ -36,7 +36,6 @@ class RippleShaderWrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = backgroundColor ?? Colors.transparent;
     final origin1 = Offset(params.get('origin1X'), params.get('origin1Y'));
     final origin2 = Offset(params.get('origin2X'), params.get('origin2Y'));
     final originScale = params.get('originScale');
@@ -49,9 +48,10 @@ class RippleShaderWrap extends StatelessWidget {
         uniforms
           ..setSize(size)
           ..setFloat(time)
-          ..setFloat(bgColor.r)
-          ..setFloat(bgColor.g)
-          ..setFloat(bgColor.b)
+          ..setFloat(backgroundColor.r)
+          ..setFloat(backgroundColor.g)
+          ..setFloat(backgroundColor.b)
+          ..setFloat(backgroundColor.a)
           ..setFloat(o1.dx)
           ..setFloat(o1.dy)
           ..setFloat(o2.dx)
@@ -61,7 +61,6 @@ class RippleShaderWrap extends StatelessWidget {
           ..setFloat(params.get('amplitude'))
           ..setFloat(params.get('speed'));
       },
-      backgroundColor: backgroundColor,
       animationMode: animationMode,
       animation: animation,
       cache: cache,

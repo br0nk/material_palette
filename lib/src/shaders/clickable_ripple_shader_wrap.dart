@@ -9,7 +9,7 @@ class ClickableRippleShaderWrap extends StatefulWidget {
   ClickableRippleShaderWrap({
     super.key,
     required this.child,
-    this.backgroundColor,
+    this.backgroundColor = Colors.transparent,
     ShaderParams? params,
     this.animationMode = ShaderAnimationMode.running,
     this.animation,
@@ -19,7 +19,7 @@ class ClickableRippleShaderWrap extends StatefulWidget {
   }) : params = params ?? clickRippleShaderDef.defaults;
 
   final Widget child;
-  final Color? backgroundColor;
+  final Color backgroundColor;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
   final Animation<double>? animation;
@@ -61,7 +61,6 @@ class _ClickableRippleShaderWrapState
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = widget.backgroundColor ?? Colors.transparent;
     final p = widget.params;
     final clicks = widget.touchPoints ?? _clicks;
 
@@ -97,12 +96,12 @@ class _ClickableRippleShaderWrapState
         uniforms.setFloat(p.get('decay'));
         uniforms.setFloat(p.get('speed'));
 
-        // Background color
-        uniforms.setFloat(bgColor.r);
-        uniforms.setFloat(bgColor.g);
-        uniforms.setFloat(bgColor.b);
+        // Background color (RGBA)
+        uniforms.setFloat(widget.backgroundColor.r);
+        uniforms.setFloat(widget.backgroundColor.g);
+        uniforms.setFloat(widget.backgroundColor.b);
+        uniforms.setFloat(widget.backgroundColor.a);
       },
-      backgroundColor: widget.backgroundColor,
       animationMode: widget.animationMode,
       animation: widget.animation,
       cache: widget.cache,

@@ -4,7 +4,7 @@ precision highp float;
 
 uniform vec2 uSize;
 uniform float time;
-uniform vec3 uBgColor;
+uniform vec4 uBgColor;         // Background color (RGBA, default transparent)
 uniform vec2 uOrigin1;
 uniform vec2 uOrigin2;
 // Controllable ripple parameters
@@ -49,7 +49,8 @@ void main() {
   float fade = fadeX * fadeY;
   
   uv += normal(uvn, time * uSpeed) * fade;
-  vec4 texColor = texture(uTexture, uv);
-  // Blend texture with background based on alpha
-  fragColor = vec4(mix(uBgColor, texColor.rgb, texColor.a), 1.0);
+  vec4 tex = texture(uTexture, uv);
+  // Composite texture over background using premultiplied-alpha "source over"
+  vec4 bg = vec4(uBgColor.rgb * uBgColor.a, uBgColor.a);
+  fragColor = tex + bg * (1.0 - tex.a);
 }

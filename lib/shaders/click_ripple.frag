@@ -11,7 +11,7 @@ uniform float uAmplitude;      // Wave amplitude (default 0.07)
 uniform float uFrequency;      // Wave frequency (default 15.0)
 uniform float uDecay;          // How fast ripples fade (default 4.0)
 uniform float uSpeed;          // How fast ripples propagate (default 2.0)
-uniform vec3 uBgColor;
+uniform vec4 uBgColor;         // Background color (RGBA, default transparent)
 uniform sampler2D uTexture;
 
 out vec4 fragColor;
@@ -55,7 +55,8 @@ void main()
     float fade = fadeX * fadeY;
 
     vec2 sampleUV = clamp(uv + totalDisplacement * fade, 0.001, 0.999);
-    vec4 texColor = texture(uTexture, sampleUV);
-    // Blend texture with background based on alpha
-    fragColor = vec4(mix(uBgColor, texColor.rgb, texColor.a), 1.0);
+    vec4 tex = texture(uTexture, sampleUV);
+    // Composite texture over background using premultiplied-alpha "source over"
+    vec4 bg = vec4(uBgColor.rgb * uBgColor.a, uBgColor.a);
+    fragColor = tex + bg * (1.0 - tex.a);
 }
