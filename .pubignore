@@ -1,0 +1,24 @@
+# Demo apps (not part of the published package)
+test/
+example/
+
+# Build artifacts & generated files
+build/
+.dart_tool/
+.packages
+.pub/
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
+**/generated_plugin_registrant.dart
+
+# IDE
+*.iml
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
