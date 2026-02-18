@@ -278,6 +278,10 @@ void main() {
     vec2 noiseCoord = uvAspect * uNoiseScale * uNoiseDensity / 10.0;
     float noise = animatedPerlin(noiseCoord, time);
 
+    // Clamp noise to valid range before pow() - Perlin noise with non-unit
+    // gradient vectors can slightly exceed [0,1], and pow(negative, x) is undefined
+    noise = clamp(noise, 0.0, 1.0);
+
     // Apply contrast to noise
     noise = pow(noise, uNoiseContrast);
 
