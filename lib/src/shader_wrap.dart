@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
+import 'package:material_palette/src/animated_sampler_repaint.dart';
 import 'package:material_palette/src/shader_types.dart';
 
 export 'package:material_palette/src/shader_types.dart';
@@ -53,7 +54,7 @@ class ShaderWrap extends StatefulWidget {
 class _ShaderWrapState extends State<ShaderWrap>
     with SingleTickerProviderStateMixin {
   Ticker? _ticker;
-  Duration _elapsed = Duration.zero;
+  final ValueNotifier<double> _time = ValueNotifier<double>(0.0);
 
   @override
   void initState() {
@@ -61,16 +62,11 @@ class _ShaderWrapState extends State<ShaderWrap>
     _setupTimeSource();
   }
 
-  // NOTE: Unlike ShaderFill (which uses CustomPaint's repaint
-  // listenable to skip build()), ShaderWrap must use setState because
-  // AnimatedSampler doesn't expose a repaint listenable API.
   void _setupTimeSource() {
     switch (widget.animationMode) {
       case ShaderAnimationMode.running:
         _ticker = createTicker((elapsed) {
-          setState(() {
-            _elapsed = elapsed;
-          });
+          _time.value = elapsed.inMilliseconds.toDouble() / 1000;
         });
         _ticker!.start();
         break;
@@ -83,7 +79,7 @@ class _ShaderWrapState extends State<ShaderWrap>
   }
 
   void _onAnimationTick() {
-    setState(() {});
+    _time.value = widget.animation!.value;
   }
 
   @override
@@ -98,7 +94,7 @@ class _ShaderWrapState extends State<ShaderWrap>
           _ticker?.stop();
           _ticker?.dispose();
           _ticker = null;
-          _elapsed = Duration.zero;
+          _time.value = 0.0;
           break;
         case ShaderAnimationMode.animation:
           oldWidget.animation?.removeListener(_onAnimationTick);
@@ -118,31 +114,19 @@ class _ShaderWrapState extends State<ShaderWrap>
     if (widget.animationMode == ShaderAnimationMode.animation) {
       widget.animation?.removeListener(_onAnimationTick);
     }
+    _time.dispose();
     super.dispose();
-  }
-
-  double get _time {
-    switch (widget.animationMode) {
-      case ShaderAnimationMode.static:
-        return 0.0;
-      case ShaderAnimationMode.running:
-        return _elapsed.inMilliseconds.toDouble() / 1000;
-      case ShaderAnimationMode.animation:
-        return widget.animation!.value;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final time = _time;
-
     Widget result = ShaderBuilder(
       (context, shader, child) {
-        return AnimatedSampler(
+        return AnimatedSamplerRepaint(
           (image, size, canvas) {
             shader
               ..setFloatUniforms((uniforms) {
-                widget.uniformsCallback(uniforms, size, time);
+                widget.uniformsCallback(uniforms, size, _time.value);
               })
               ..setImageSampler(0, image);
 
@@ -151,6 +135,7 @@ class _ShaderWrapState extends State<ShaderWrap>
               Paint()..shader = shader,
             );
           },
+          repaint: _time,
           child: widget.child,
         );
       },
