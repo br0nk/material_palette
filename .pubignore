@@ -1,6 +1,5 @@
-# Demo apps (not part of the published package)
+# Internal test/demo app (not part of the published package)
 test/
-example/
 
 # Build artifacts & generated files
 build/
