@@ -1,0 +1,8 @@
+# Flutter generated platform directories
+# These are scaffolded by `flutter create` and can be regenerated.
+android/
+ios/
+.dart_tool/
+
+# Pub
+pubspec.lock
