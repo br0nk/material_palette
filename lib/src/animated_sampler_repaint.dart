@@ -219,10 +219,13 @@ class _ShaderSamplerBuilderLayer extends OffsetLayer {
     builder.pushTransform(transform.storage);
     addChildrenToScene(builder);
     builder.pop();
-    return builder.build().toImageSync(
-          (pixelRatio * bounds.width).ceil(),
-          (pixelRatio * bounds.height).ceil(),
-        );
+    final ui.Scene scene = builder.build();
+    final ui.Image image = scene.toImageSync(
+      (pixelRatio * bounds.width).ceil(),
+      (pixelRatio * bounds.height).ceil(),
+    );
+    scene.dispose();
+    return image;
   }
 
   @override
