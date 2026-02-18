@@ -18,7 +18,9 @@ out vec4 fragColor;
 
 // Simple circular wave function
 float wave(vec2 pos, float t, float freq, float numWaves, vec2 center) {
-	float d = length(pos - center);
+	vec2 delta = pos - center;
+	delta.x *= uSize.x / uSize.y;
+	float d = length(delta);
 	d = log(1.0 + exp(d));
 	return 1.0/(1.0+20.0*d*d) *
 		   sin(2.0*3.1415*(-numWaves*d + t*freq));

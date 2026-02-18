@@ -318,6 +318,8 @@ vec3 applyLighting(vec3 color, vec3 normal) {
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
     vec2 uv = fragCoord / uSize;
+    float aspect = uSize.x / uSize.y;
+    vec2 uvAspect = vec2(uv.x * aspect, uv.y);
     float time = uTime * uAnimSpeed;
 
     // Calculate base radial gradient position
@@ -325,7 +327,7 @@ void main() {
     float edgeAtten = edgeAttenuation(gradientT, uEdgeFade, uEdgeFadeMode);
 
     // Generate Voronoi noise
-    vec2 noiseCoord = uv * uCellScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uvAspect * uCellScale * uNoiseDensity / 10.0;
     float noise = voronoiNoise(noiseCoord, uCellJitter, uDistanceType, uOutputMode, uCellSmoothness, time);
 
     noise = clamp(noise * 0.7, 0.0, 1.0);
@@ -346,7 +348,7 @@ void main() {
 
     // Compute normal and apply lighting
     float attenuatedBump = uBumpStrength * edgeAtten;
-    vec3 normal = computeNormal(uv, time, attenuatedBump);
+    vec3 normal = computeNormal(uvAspect, time, attenuatedBump);
     color = applyLighting(color, normal);
 
     // Apply contrast

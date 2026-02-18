@@ -104,10 +104,11 @@ float grittyTexture(vec2 fragCoord, float time, float gradientT) {
 
 float calculateGradient(vec2 uv) {
     // Convert angle to radians
+    float aspect = uSize.x / uSize.y;
     float angle = uGradientAngle * 3.14159265 / 180.0;
 
     // Direction vector
-    vec2 dir = vec2(cos(angle), sin(angle));
+    vec2 dir = normalize(vec2(cos(angle) / aspect, sin(angle)));
 
     // Center UV and apply scale
     vec2 centered = (uv - 0.5) / uGradientScale;

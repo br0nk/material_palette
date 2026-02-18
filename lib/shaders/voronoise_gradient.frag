@@ -148,8 +148,9 @@ float orderedDither(vec2 p) {
 // ============ GRADIENT FUNCTION ============
 
 float calculateGradient(vec2 uv) {
+    float aspect = uSize.x / uSize.y;
     float angle = uGradientAngle * 3.14159265 / 180.0;
-    vec2 dir = vec2(cos(angle), sin(angle));
+    vec2 dir = normalize(vec2(cos(angle) / aspect, sin(angle)));
     vec2 centered = (uv - 0.5) / uGradientScale;
     float t = dot(centered, dir) + 0.5 + uGradientOffset;
     return clamp(t, 0.0, 1.0);
@@ -223,6 +224,8 @@ vec3 applyLighting(vec3 color, vec3 normal) {
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
     vec2 uv = fragCoord / uSize;
+    float aspect = uSize.x / uSize.y;
+    vec2 uvAspect = vec2(uv.x * aspect, uv.y);
     float time = uTime * uAnimSpeed;
 
     // Calculate base gradient position
@@ -230,7 +233,7 @@ void main() {
     float edgeAtten = edgeAttenuation(gradientT, uEdgeFade, uEdgeFadeMode);
 
     // Generate Voronoise
-    vec2 noiseCoord = uv * uCellScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uvAspect * uCellScale * uNoiseDensity / 10.0;
     // u controls regularity (0=irregular, 1=regular grid)
     // v controls smoothness (0=sharp cells, 1=smooth noise)
     float noise = voronoise(noiseCoord, 1.0 - uNoiseBlend, uEdgeSmoothness, time);
@@ -251,7 +254,7 @@ void main() {
 
     // Compute normal and apply lighting
     float attenuatedBump = uBumpStrength * edgeAtten;
-    vec3 normal = computeNormal(uv, time, attenuatedBump);
+    vec3 normal = computeNormal(uvAspect, time, attenuatedBump);
     color = applyLighting(color, normal);
 
     // Apply contrast

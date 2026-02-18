@@ -314,6 +314,8 @@ vec3 applyLighting(vec3 color, vec3 normal) {
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
     vec2 uv = fragCoord / uSize;
+    float aspect = uSize.x / uSize.y;
+    vec2 uvAspect = vec2(uv.x * aspect, uv.y);
     float time = uTime * uAnimSpeed;
 
     // Calculate base radial gradient position
@@ -323,7 +325,7 @@ void main() {
     float edgeAtten = edgeAttenuation(gradientT, uEdgeFade, uEdgeFadeMode);
 
     // Generate Simplex noise
-    vec2 noiseCoord = uv * uNoiseScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uvAspect * uNoiseScale * uNoiseDensity / 10.0;
     float noise = animatedSimplex(noiseCoord, time);
 
     // Apply sharpness
@@ -345,7 +347,7 @@ void main() {
 
     // Compute normal with attenuated bump and apply lighting
     float attenuatedBump = uBumpStrength * edgeAtten;
-    vec3 normal = computeNormal(uv, time, attenuatedBump);
+    vec3 normal = computeNormal(uvAspect, time, attenuatedBump);
     color = applyLighting(color, normal);
 
     // Apply contrast
