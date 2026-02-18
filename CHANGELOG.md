@@ -10,3 +10,8 @@
 
 - Fixes for layer transparency, shader aspect ratio, unnecessary rebuilts, animatedsampler leak, color gamut in perlin noise.
 - Add demo app in test/ for debugging wrap shaders.
+
+## 0.4.0
+
+- Reinclude example app in pubdev
+
