@@ -336,6 +336,30 @@ class ShaderColorPalette {
 
 }
 
+/// Paints a checkerboard pattern to visualize transparency.
+class _CheckerboardPainter extends CustomPainter {
+  const _CheckerboardPainter({this.cellSize = 6.0});
+  final double cellSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final light = Paint()..color = const Color(0xFFCCCCCC);
+    final dark = Paint()..color = const Color(0xFF999999);
+    for (double y = 0; y < size.height; y += cellSize) {
+      for (double x = 0; x < size.width; x += cellSize) {
+        final isLight = ((x ~/ cellSize) + (y ~/ cellSize)) % 2 == 0;
+        canvas.drawRect(
+          Rect.fromLTWH(x, y, cellSize, cellSize),
+          isLight ? light : dark,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 /// A labeled color picker row that shows a color swatch and opens an HSL picker dialog on tap.
 class ControlColorPicker extends StatelessWidget {
   const ControlColorPicker({
@@ -381,13 +405,20 @@ class ControlColorPicker extends StatelessWidget {
           const Spacer(),
           GestureDetector(
             onTap: () => _showColorPicker(context),
-            child: Container(
-              width: 32,
-              height: 24,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.white30),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                width: 32,
+                height: 24,
+                child: CustomPaint(
+                  painter: const _CheckerboardPainter(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      border: Border.all(color: Colors.white30),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -422,6 +453,7 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
   late double _hue;
   late double _saturation;
   late double _lightness;
+  late double _alpha;
   late TextEditingController _hexController;
   bool _hexError = false;
 
@@ -432,6 +464,7 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
     _hue = hsl.hue;
     _saturation = hsl.saturation;
     _lightness = hsl.lightness;
+    _alpha = widget.initialColor.a;
     _hexController = TextEditingController(text: _colorToHex(widget.initialColor));
   }
 
@@ -441,24 +474,30 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
     super.dispose();
   }
 
-  Color get _currentColor => HSLColor.fromAHSL(1.0, _hue, _saturation, _lightness).toColor();
+  Color get _currentColor => HSLColor.fromAHSL(_alpha, _hue, _saturation, _lightness).toColor();
 
   String _colorToHex(Color color) {
     final r = (color.r * 255.0).round().clamp(0, 255);
     final g = (color.g * 255.0).round().clamp(0, 255);
     final b = (color.b * 255.0).round().clamp(0, 255);
-    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    final a = (color.a * 255.0).round().clamp(0, 255);
+    final rgb = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
+    if (a < 255) {
+      return '${rgb}${a.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    }
+    return rgb.toUpperCase();
   }
 
   Color? _hexToColor(String hex) {
     hex = hex.trim().toUpperCase();
     if (hex.startsWith('#')) hex = hex.substring(1);
-    if (hex.length != 6) return null;
+    if (hex.length != 6 && hex.length != 8) return null;
     try {
       final r = int.parse(hex.substring(0, 2), radix: 16);
       final g = int.parse(hex.substring(2, 4), radix: 16);
       final b = int.parse(hex.substring(4, 6), radix: 16);
-      return Color.fromRGBO(r, g, b, 1);
+      final a = hex.length == 8 ? int.parse(hex.substring(6, 8), radix: 16) : 255;
+      return Color.fromRGBO(r, g, b, a / 255.0);
     } catch (_) {
       return null;
     }
@@ -470,6 +509,7 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
       _hue = hsl.hue;
       _saturation = hsl.saturation;
       _lightness = hsl.lightness;
+      _alpha = color.a;
       _hexController.text = _colorToHex(color);
       _hexError = false;
     });
@@ -505,18 +545,25 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _currentColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white24),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        height: 40,
+                        child: CustomPaint(
+                          painter: const _CheckerboardPainter(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _currentColor,
+                              border: Border.all(color: Colors.white24),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
-                    width: 90,
+                    width: 100,
                     child: TextField(
                       controller: _hexController,
                       style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
@@ -628,6 +675,9 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
                 ),
                 onChanged: (v) => setState(() { _lightness = v; _updateHexFromCurrentColor(); }),
               ),
+
+              // Alpha slider with checkerboard background
+              _buildAlphaSlider(),
             ],
           ),
         ),
@@ -701,6 +751,75 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
                   min: 0,
                   max: max,
                   onChanged: onChanged,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlphaSlider() {
+    final opaqueColor = HSLColor.fromAHSL(1.0, _hue, _saturation, _lightness).toColor();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Alpha', style: TextStyle(fontSize: 11, color: Colors.white70)),
+              Text(
+                _alpha.toStringAsFixed(2),
+                style: const TextStyle(fontSize: 10, color: Colors.white54),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              // Checkerboard + gradient track
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: SizedBox(
+                  height: 12,
+                  child: CustomPaint(
+                    painter: const _CheckerboardPainter(cellSize: 4.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            opaqueColor.withValues(alpha: 0.0),
+                            opaqueColor,
+                          ],
+                        ),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Transparent slider on top
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 12,
+                  activeTrackColor: Colors.transparent,
+                  inactiveTrackColor: Colors.transparent,
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 8,
+                    elevation: 2,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                  thumbColor: Colors.white,
+                ),
+                child: Slider(
+                  value: _alpha,
+                  min: 0,
+                  max: 1,
+                  onChanged: (v) => setState(() { _alpha = v; _updateHexFromCurrentColor(); }),
                 ),
               ),
             ],
@@ -797,41 +916,30 @@ class PresetDialog extends StatelessWidget {
   }
 }
 
-/// Generates a color scheme (primary, secondary, tertiary) from a single seed color.
+/// Generates a color scheme from a single seed color.
 /// Uses HSL manipulation for explicit luminance control to create visually distinct colors.
 class SeedColorGenerator {
   static final Random _random = Random();
 
-  /// Generate a color scheme from a seed color.
-  /// Returns (primary, secondary, tertiary) colors with varied luminance for visual depth.
-  static (Color, Color, Color) generateFromSeed(Color seedColor) {
+  /// Generate N colors from a seed color, distributed across hue and luminance.
+  static List<Color> generateFromSeed(Color seedColor, {int count = 3}) {
     final hsl = HSLColor.fromColor(seedColor);
-    
-    // Primary: medium luminance, seed hue
-    final primary = HSLColor.fromAHSL(
-      1.0,
-      hsl.hue,
-      hsl.saturation.clamp(0.4, 0.9),
-      0.55,
-    ).toColor();
-    
-    // Secondary: darker, shifted hue (+30 degrees for analogous harmony)
-    final secondary = HSLColor.fromAHSL(
-      1.0,
-      (hsl.hue + 30) % 360,
-      (hsl.saturation * 0.8).clamp(0.3, 0.8),
-      0.30,
-    ).toColor();
-    
-    // Tertiary: lighter, opposite shift (-30 degrees)
-    final tertiary = HSLColor.fromAHSL(
-      1.0,
-      (hsl.hue - 30 + 360) % 360,
-      (hsl.saturation * 0.7).clamp(0.25, 0.7),
-      0.75,
-    ).toColor();
-    
-    return (primary, secondary, tertiary);
+    final colors = <Color>[];
+
+    for (int i = 0; i < count; i++) {
+      final t = count > 1 ? i / (count - 1) : 0.5;
+      // Spread hue across ±60 degrees (analogous harmony)
+      final hueShift = (t - 0.5) * 120.0;
+      final hue = (hsl.hue + hueShift + 360) % 360;
+      // Vary lightness from 0.75 (light) to 0.30 (dark)
+      final lightness = 0.75 - t * 0.45;
+      // Vary saturation slightly
+      final saturation = (hsl.saturation * (0.9 - t * 0.2)).clamp(0.25, 0.9);
+
+      colors.add(HSLColor.fromAHSL(1.0, hue, saturation, lightness).toColor());
+    }
+
+    return colors;
   }
 
   /// Generate a random seed color.
@@ -850,22 +958,14 @@ class SeedColorGenerator {
 class ColorSchemeGeneratorWidget extends StatefulWidget {
   const ColorSchemeGeneratorWidget({
     super.key,
-    required this.initialColorA,
-    required this.initialColorB,
-    required this.initialColorMid,
+    required this.colorCount,
+    required this.initialColors,
     required this.onColorsChanged,
-    this.labelA = 'Primary',
-    this.labelB = 'Secondary',
-    this.labelMid = 'Tertiary',
   });
 
-  final Color initialColorA;
-  final Color initialColorB;
-  final Color initialColorMid;
-  final void Function(Color colorA, Color colorB, Color colorMid) onColorsChanged;
-  final String labelA;
-  final String labelB;
-  final String labelMid;
+  final int colorCount;
+  final List<Color> initialColors;
+  final void Function(List<Color> colors) onColorsChanged;
 
   @override
   State<ColorSchemeGeneratorWidget> createState() => _ColorSchemeGeneratorWidgetState();
@@ -877,14 +977,12 @@ class _ColorSchemeGeneratorWidgetState extends State<ColorSchemeGeneratorWidget>
   @override
   void initState() {
     super.initState();
-    // Infer seed from current primary color
-    _seedColor = widget.initialColorA;
+    _seedColor = widget.initialColors.isNotEmpty ? widget.initialColors.first : Colors.blue;
   }
 
   void _regenerateFromSeed() {
-    final (primary, secondary, tertiary) = SeedColorGenerator.generateFromSeed(_seedColor);
-    // Direct callback to parent - no local state needed
-    widget.onColorsChanged(primary, secondary, tertiary);
+    final colors = SeedColorGenerator.generateFromSeed(_seedColor, count: widget.colorCount);
+    widget.onColorsChanged(colors);
   }
 
   void _randomizeSeed() {
@@ -902,7 +1000,6 @@ class _ColorSchemeGeneratorWidgetState extends State<ColorSchemeGeneratorWidget>
         title: 'Pick Seed Color',
         onColorSelected: (selectedColor) {
           setState(() => _seedColor = selectedColor);
-          // Don't auto-regenerate - user must click "Apply" to update shader colors
         },
       ),
     );
@@ -958,36 +1055,60 @@ class _ColorSchemeGeneratorWidgetState extends State<ColorSchemeGeneratorWidget>
         ),
         const SizedBox(height: 8),
 
-        // Generated colors preview - uses widget props directly
+        // Generated colors preview
         Row(
           children: [
-            _buildColorPreview(widget.labelA, widget.initialColorA),
-            const SizedBox(width: 8),
-            _buildColorPreview(widget.labelB, widget.initialColorB),
-            const SizedBox(width: 8),
-            _buildColorPreview(widget.labelMid, widget.initialColorMid),
+            for (int i = 0; i < widget.colorCount && i < widget.initialColors.length; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              _buildColorPreview('color$i', widget.initialColors[i], i),
+            ],
           ],
         ),
       ],
     );
   }
 
-  Widget _buildColorPreview(String label, Color color) {
+  Widget _buildColorPreview(String label, Color color, int index) {
     return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey)),
-          const SizedBox(height: 2),
-          Container(
-            height: 24,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.white24),
+      child: GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (context) => HSLColorPickerDialog(
+              initialColor: color,
+              title: 'Pick $label',
+              onColorSelected: (selectedColor) {
+                final colors = List<Color>.from(widget.initialColors);
+                if (index < colors.length) {
+                  colors[index] = selectedColor;
+                  widget.onColorsChanged(colors);
+                }
+              },
             ),
-          ),
-        ],
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+            const SizedBox(height: 2),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 24,
+                child: CustomPaint(
+                  painter: const _CheckerboardPainter(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      border: Border.all(color: Colors.white24),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

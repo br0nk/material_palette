@@ -12,7 +12,6 @@ uniform float uGradientScale;      // Scale factor for viewport (1.0 = full view
 uniform float uGradientOffset;     // Shift gradient position (-1 to 1)
 
 // Noise settings
-uniform float uNoiseDensity;       // Noise scale (higher = finer detail)
 uniform float uNoiseIntensity;     // How much noise affects the gradient (0-1)
 uniform float uDitherStrength;     // Dithering at color boundaries (0-1)
 
@@ -23,11 +22,19 @@ uniform float uAnimSpeed;          // Noise animation speed
 uniform float uNoiseScale;         // Scale of the Perlin noise
 uniform float uNoiseContrast;      // Contrast of the noise pattern
 
-// Color palette (sRGB) - gradient endpoints
-uniform vec3 uColorA;              // Start color
-uniform vec3 uColorB;              // End color
-uniform vec3 uColorMid;            // Optional mid color
-uniform float uMidPosition;        // Position of mid color (0-1), -1 to disable
+// Color palette (sRGB, RGBA) - up to 10 gradient stops
+uniform vec4 uColor0;
+uniform vec4 uColor1;
+uniform vec4 uColor2;
+uniform vec4 uColor3;
+uniform vec4 uColor4;
+uniform vec4 uColor5;
+uniform vec4 uColor6;
+uniform vec4 uColor7;
+uniform vec4 uColor8;
+uniform vec4 uColor9;
+uniform float uColorCount;         // Number of active color stops (2-10)
+uniform float uSoftness;           // Transition sharpness (0=sharp, 1=smooth)
 
 // Post-processing
 uniform float uExposure;
@@ -82,9 +89,9 @@ vec3 hash33(vec3 p) {
 
 // ============ ANTI-ALIASING ============
 
-float getAASmoothing(vec2 uv, float density) {
-    // Approximate AA based on density (higher density = more smoothing needed)
-    return clamp(density * 0.003, 0.0, 0.3);
+float getAASmoothing(vec2 uv, float scale) {
+    // Approximate AA based on scale (higher scale = more smoothing needed)
+    return clamp(scale * 0.006, 0.0, 0.3);
 }
 
 // ============ EDGE ATTENUATION ============
@@ -187,28 +194,67 @@ float calculateGradient(vec2 uv) {
     return clamp(t, 0.0, 1.0);
 }
 
-// ============ COLOR INTERPOLATION ============
+// ============ MULTI-STOP COLOR INTERPOLATION ============
 
-vec3 gradientColor(float t) {
-    vec3 colorA = srgbToLinear(uColorA);
-    vec3 colorB = srgbToLinear(uColorB);
+// Get color stop by index
+vec4 getColorStop(int i) {
+    if (i == 0) return uColor0;
+    if (i == 1) return uColor1;
+    if (i == 2) return uColor2;
+    if (i == 3) return uColor3;
+    if (i == 4) return uColor4;
+    if (i == 5) return uColor5;
+    if (i == 6) return uColor6;
+    if (i == 7) return uColor7;
+    if (i == 8) return uColor8;
+    return uColor9;
+}
 
-    if (uMidPosition >= 0.0 && uMidPosition <= 1.0) {
-        vec3 colorMid = srgbToLinear(uColorMid);
-        if (t < uMidPosition) {
-            return mix(colorA, colorMid, t / uMidPosition);
-        } else {
-            return mix(colorMid, colorB, (t - uMidPosition) / (1.0 - uMidPosition));
-        }
+// Multi-stop gradient with softness control and premultiplied alpha
+vec4 gradientColor(float t) {
+    int count = int(uColorCount);
+    if (count < 2) count = 2;
+    if (count > 10) count = 10;
+
+    // Map t to color stop space
+    float stopT = t * float(count - 1);
+    int idx = int(floor(stopT));
+    if (idx >= count - 1) idx = count - 2;
+    float frac = stopT - float(idx);
+
+    // Get the two adjacent stops
+    vec4 stopA = getColorStop(idx);
+    vec4 stopB = getColorStop(idx + 1);
+
+    // Convert sRGB to linear, premultiply alpha
+    vec3 linA = srgbToLinear(stopA.rgb);
+    vec3 linB = srgbToLinear(stopB.rgb);
+    float alphaA = stopA.a;
+    float alphaB = stopB.a;
+
+    // Premultiply
+    vec4 pmA = vec4(linA * alphaA, alphaA);
+    vec4 pmB = vec4(linB * alphaB, alphaB);
+
+    // Apply softness to transition
+    float blend;
+    if (uSoftness >= 0.999) {
+        blend = frac;
+    } else if (uSoftness <= 0.001) {
+        blend = step(0.5, frac);
     } else {
-        return mix(colorA, colorB, t);
+        float edge = 0.5 * uSoftness;
+        blend = smoothstep(0.5 - edge, 0.5 + edge, frac);
     }
+
+    // Interpolate in premultiplied space
+    return mix(pmA, pmB, blend);
 }
 
 // ============ NORMAL MAP FROM NOISE ============
 
 vec3 computeNormal(vec2 uv, float time, float bumpStrength) {
-    vec2 noiseCoord = uv * uNoiseScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uv * uNoiseScale;
     float eps = 0.01;
 
     // Sample noise at neighboring points
@@ -275,7 +321,7 @@ void main() {
     float edgeAtten = edgeAttenuation(gradientT, uEdgeFade, uEdgeFadeMode);
 
     // Generate Perlin noise
-    vec2 noiseCoord = uvAspect * uNoiseScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uvAspect * uNoiseScale;
     float noise = animatedPerlin(noiseCoord, time);
 
     // Clamp noise to valid range before pow() - Perlin noise with non-unit
@@ -286,7 +332,7 @@ void main() {
     noise = pow(noise, uNoiseContrast);
 
     // AA: smooth noise based on screen-space derivatives
-    float aaFactor = getAASmoothing(uv, uNoiseDensity);
+    float aaFactor = getAASmoothing(uv, uNoiseScale);
     noise = mix(noise, smoothstep(0.0, 1.0, noise), aaFactor);
 
     // Add ordered dither for smoother transitions
@@ -296,8 +342,12 @@ void main() {
     float noiseMod = (noise - 0.5) * 2.0 * uNoiseIntensity * edgeAtten;
     float noisyT = clamp(gradientT + noiseMod + dither, 0.0, 1.0);
 
-    // Get gradient color
-    vec3 color = gradientColor(noisyT);
+    // Get gradient color (premultiplied alpha)
+    vec4 pmColor = gradientColor(noisyT);
+
+    // Un-premultiply for post-processing
+    float alpha = pmColor.a;
+    vec3 color = alpha > 0.001 ? pmColor.rgb / alpha : vec3(0.0);
 
     // Compute normal with attenuated bump and apply lighting
     float attenuatedBump = uBumpStrength * edgeAtten;
@@ -317,5 +367,6 @@ void main() {
     color = linearToSrgb(color);
     color = clamp(color, 0.0, 1.0);
 
-    fragColor = vec4(color, 1.0);
+    // Re-premultiply for output
+    fragColor = vec4(color * alpha, alpha);
 }

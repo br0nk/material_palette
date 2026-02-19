@@ -19,11 +19,19 @@ uniform float uDitherStrength;     // Dithering at color boundaries (0-1)
 // Animation
 uniform float uAnimSpeed;          // Noise animation speed
 
-// Color palette (sRGB) - gradient endpoints
-uniform vec3 uColorA;              // Start color
-uniform vec3 uColorB;              // End color
-uniform vec3 uColorMid;            // Optional mid color
-uniform float uMidPosition;        // Position of mid color (0-1), -1 to disable
+// Color palette (sRGB, RGBA) - up to 10 gradient stops
+uniform vec4 uColor0;
+uniform vec4 uColor1;
+uniform vec4 uColor2;
+uniform vec4 uColor3;
+uniform vec4 uColor4;
+uniform vec4 uColor5;
+uniform vec4 uColor6;
+uniform vec4 uColor7;
+uniform vec4 uColor8;
+uniform vec4 uColor9;
+uniform float uColorCount;         // Number of active color stops (2-10)
+uniform float uSoftness;           // Transition sharpness (0=sharp, 1=smooth)
 
 // Post-processing
 uniform float uExposure;
@@ -120,29 +128,66 @@ float calculateGradient(vec2 uv) {
     return clamp(t, 0.0, 1.0);
 }
 
-// ============ COLOR INTERPOLATION ============
+// ============ MULTI-STOP COLOR INTERPOLATION ============
 
-vec3 gradientColor(float t) {
-    vec3 colorA = srgbToLinear(uColorA);
-    vec3 colorB = srgbToLinear(uColorB);
+// Get color stop by index (GLSL has no array indexing for uniforms in Flutter)
+vec4 getColorStop(int i) {
+    if (i == 0) return uColor0;
+    if (i == 1) return uColor1;
+    if (i == 2) return uColor2;
+    if (i == 3) return uColor3;
+    if (i == 4) return uColor4;
+    if (i == 5) return uColor5;
+    if (i == 6) return uColor6;
+    if (i == 7) return uColor7;
+    if (i == 8) return uColor8;
+    return uColor9;
+}
 
-    if (uMidPosition >= 0.0 && uMidPosition <= 1.0) {
-        // 3-stop gradient
-        vec3 colorMid = srgbToLinear(uColorMid);
+// Multi-stop gradient with softness control and premultiplied alpha
+vec4 gradientColor(float t) {
+    int count = int(uColorCount);
+    if (count < 2) count = 2;
+    if (count > 10) count = 10;
 
-        if (t < uMidPosition) {
-            return mix(colorA, colorMid, t / uMidPosition);
-        } else {
-            return mix(colorMid, colorB, (t - uMidPosition) / (1.0 - uMidPosition));
-        }
+    // Map t to color stop space
+    float stopT = t * float(count - 1);
+    int idx = int(floor(stopT));
+    if (idx >= count - 1) idx = count - 2;
+    float frac = stopT - float(idx);
+
+    // Get the two adjacent stops
+    vec4 stopA = getColorStop(idx);
+    vec4 stopB = getColorStop(idx + 1);
+
+    // Convert sRGB to linear, premultiply alpha
+    vec3 linA = srgbToLinear(stopA.rgb);
+    vec3 linB = srgbToLinear(stopB.rgb);
+    float alphaA = stopA.a;
+    float alphaB = stopB.a;
+
+    // Premultiply
+    vec4 pmA = vec4(linA * alphaA, alphaA);
+    vec4 pmB = vec4(linB * alphaB, alphaB);
+
+    // Apply softness to transition
+    float blend;
+    if (uSoftness >= 0.999) {
+        blend = frac; // fully smooth linear interpolation
+    } else if (uSoftness <= 0.001) {
+        blend = step(0.5, frac); // hard step
     } else {
-        // Simple 2-stop gradient
-        return mix(colorA, colorB, t);
+        // smoothstep-based transition with adjustable width
+        float edge = 0.5 * uSoftness;
+        blend = smoothstep(0.5 - edge, 0.5 + edge, frac);
     }
+
+    // Interpolate in premultiplied space
+    return mix(pmA, pmB, blend);
 }
 
 // Apply stipple noise to create gritty color transition
-vec3 grittyGradientColor(float gradientT, float noise) {
+vec4 grittyGradientColor(float gradientT, float noise) {
     // Use noise to modulate the gradient threshold
     // This creates the stippled/dithered transition effect
     float noiseMod = (noise - 0.5) * 2.0 * uNoiseIntensity;
@@ -167,8 +212,12 @@ void main() {
     // Generate stipple noise
     float grit = grittyTexture(fragCoord, time, gradientT);
 
-    // Get color with gritty/stippled transition
-    vec3 color = grittyGradientColor(gradientT, grit);
+    // Get color with gritty/stippled transition (premultiplied alpha)
+    vec4 pmColor = grittyGradientColor(gradientT, grit);
+
+    // Un-premultiply for post-processing
+    float alpha = pmColor.a;
+    vec3 color = alpha > 0.001 ? pmColor.rgb / alpha : vec3(0.0);
 
     // Apply contrast
     color = mix(vec3(0.5), color, uContrast);
@@ -183,5 +232,6 @@ void main() {
     color = linearToSrgb(color);
     color = clamp(color, 0.0, 1.0);
 
-    fragColor = vec4(color, 1.0);
+    // Re-premultiply for output
+    fragColor = vec4(color * alpha, alpha);
 }

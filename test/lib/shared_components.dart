@@ -256,6 +256,30 @@ class ShaderColorPalette {
   static final voronoise = ShaderColorPalette('Voronoise', const Color(0xFFFF8F00));
 }
 
+/// Paints a checkerboard pattern to visualize transparency.
+class _CheckerboardPainter extends CustomPainter {
+  const _CheckerboardPainter({this.cellSize = 6.0});
+  final double cellSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final light = Paint()..color = const Color(0xFFCCCCCC);
+    final dark = Paint()..color = const Color(0xFF999999);
+    for (double y = 0; y < size.height; y += cellSize) {
+      for (double x = 0; x < size.width; x += cellSize) {
+        final isLight = ((x ~/ cellSize) + (y ~/ cellSize)) % 2 == 0;
+        canvas.drawRect(
+          Rect.fromLTWH(x, y, cellSize, cellSize),
+          isLight ? light : dark,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 /// A labeled color picker row that shows a color swatch and opens an HSL picker dialog on tap.
 class ControlColorPicker extends StatelessWidget {
   const ControlColorPicker({
@@ -300,13 +324,20 @@ class ControlColorPicker extends StatelessWidget {
           const Spacer(),
           GestureDetector(
             onTap: () => _showColorPicker(context),
-            child: Container(
-              width: 32,
-              height: 24,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.white30),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                width: 32,
+                height: 24,
+                child: CustomPaint(
+                  painter: const _CheckerboardPainter(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      border: Border.all(color: Colors.white30),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -339,6 +370,7 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
   late double _hue;
   late double _saturation;
   late double _lightness;
+  late double _alpha;
   late TextEditingController _hexController;
   bool _hexError = false;
 
@@ -349,6 +381,7 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
     _hue = hsl.hue;
     _saturation = hsl.saturation;
     _lightness = hsl.lightness;
+    _alpha = widget.initialColor.a;
     _hexController = TextEditingController(text: _colorToHex(widget.initialColor));
   }
 
@@ -358,24 +391,30 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
     super.dispose();
   }
 
-  Color get _currentColor => HSLColor.fromAHSL(1.0, _hue, _saturation, _lightness).toColor();
+  Color get _currentColor => HSLColor.fromAHSL(_alpha, _hue, _saturation, _lightness).toColor();
 
   String _colorToHex(Color color) {
     final r = (color.r * 255.0).round().clamp(0, 255);
     final g = (color.g * 255.0).round().clamp(0, 255);
     final b = (color.b * 255.0).round().clamp(0, 255);
-    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    final a = (color.a * 255.0).round().clamp(0, 255);
+    final rgb = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
+    if (a < 255) {
+      return '${rgb}${a.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    }
+    return rgb.toUpperCase();
   }
 
   Color? _hexToColor(String hex) {
     hex = hex.trim().toUpperCase();
     if (hex.startsWith('#')) hex = hex.substring(1);
-    if (hex.length != 6) return null;
+    if (hex.length != 6 && hex.length != 8) return null;
     try {
       final r = int.parse(hex.substring(0, 2), radix: 16);
       final g = int.parse(hex.substring(2, 4), radix: 16);
       final b = int.parse(hex.substring(4, 6), radix: 16);
-      return Color.fromRGBO(r, g, b, 1);
+      final a = hex.length == 8 ? int.parse(hex.substring(6, 8), radix: 16) : 255;
+      return Color.fromRGBO(r, g, b, a / 255.0);
     } catch (_) {
       return null;
     }
@@ -387,6 +426,7 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
       _hue = hsl.hue;
       _saturation = hsl.saturation;
       _lightness = hsl.lightness;
+      _alpha = color.a;
       _hexController.text = _colorToHex(color);
       _hexError = false;
     });
@@ -421,18 +461,25 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _currentColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white24),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        height: 40,
+                        child: CustomPaint(
+                          painter: const _CheckerboardPainter(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _currentColor,
+                              border: Border.all(color: Colors.white24),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
-                    width: 90,
+                    width: 100,
                     child: TextField(
                       controller: _hexController,
                       style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
@@ -534,6 +581,9 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
                 ),
                 onChanged: (v) => setState(() { _lightness = v; _updateHexFromCurrentColor(); }),
               ),
+
+              // Alpha slider with checkerboard background
+              _buildAlphaSlider(),
             ],
           ),
         ),
@@ -605,6 +655,73 @@ class _HSLColorPickerDialogState extends State<HSLColorPickerDialog> {
                   min: 0,
                   max: max,
                   onChanged: onChanged,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlphaSlider() {
+    final opaqueColor = HSLColor.fromAHSL(1.0, _hue, _saturation, _lightness).toColor();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Alpha', style: TextStyle(fontSize: 11, color: Colors.white70)),
+              Text(
+                _alpha.toStringAsFixed(2),
+                style: const TextStyle(fontSize: 10, color: Colors.white54),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: SizedBox(
+                  height: 12,
+                  child: CustomPaint(
+                    painter: const _CheckerboardPainter(cellSize: 4.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            opaqueColor.withValues(alpha: 0.0),
+                            opaqueColor,
+                          ],
+                        ),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 12,
+                  activeTrackColor: Colors.transparent,
+                  inactiveTrackColor: Colors.transparent,
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 8,
+                    elevation: 2,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                  thumbColor: Colors.white,
+                ),
+                child: Slider(
+                  value: _alpha,
+                  min: 0,
+                  max: 1,
+                  onChanged: (v) => setState(() { _alpha = v; _updateHexFromCurrentColor(); }),
                 ),
               ),
             ],

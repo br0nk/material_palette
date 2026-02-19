@@ -12,7 +12,6 @@ uniform float uGradientScale;
 uniform float uGradientOffset;
 
 // Noise settings
-uniform float uNoiseDensity;
 uniform float uNoiseIntensity;
 uniform float uDitherStrength;
 
@@ -24,11 +23,19 @@ uniform float uCellScale;
 uniform float uNoiseBlend;      // 0=voronoi, 1=noise
 uniform float uEdgeSmoothness;  // Smooth edges between cells
 
-// Color palette
-uniform vec3 uColorA;
-uniform vec3 uColorB;
-uniform vec3 uColorMid;
-uniform float uMidPosition;
+// Color palette (multi-stop)
+uniform vec4 uColor0;
+uniform vec4 uColor1;
+uniform vec4 uColor2;
+uniform vec4 uColor3;
+uniform vec4 uColor4;
+uniform vec4 uColor5;
+uniform vec4 uColor6;
+uniform vec4 uColor7;
+uniform vec4 uColor8;
+uniform vec4 uColor9;
+uniform float uColorCount;
+uniform float uSoftness;
 
 // Post-processing
 uniform float uExposure;
@@ -68,9 +75,9 @@ vec3 linearToSrgb(vec3 c) {
 
 // ============ ANTI-ALIASING ============
 
-float getAASmoothing(vec2 uv, float density) {
-    // Approximate AA based on density (higher density = more smoothing needed)
-    return clamp(density * 0.003, 0.0, 0.3);
+float getAASmoothing(vec2 uv, float scale) {
+    // Approximate AA based on scale (higher scale = more smoothing needed)
+    return clamp(scale * 0.006, 0.0, 0.3);
 }
 
 // ============ EDGE ATTENUATION ============
@@ -156,28 +163,37 @@ float calculateGradient(vec2 uv) {
     return clamp(t, 0.0, 1.0);
 }
 
-// ============ COLOR INTERPOLATION ============
+// ============ COLOR INTERPOLATION (MULTI-STOP) ============
 
-vec3 gradientColor(float t) {
-    vec3 colorA = srgbToLinear(uColorA);
-    vec3 colorB = srgbToLinear(uColorB);
+vec4 getColorStop(int i) {
+    if (i == 0) return uColor0; if (i == 1) return uColor1;
+    if (i == 2) return uColor2; if (i == 3) return uColor3;
+    if (i == 4) return uColor4; if (i == 5) return uColor5;
+    if (i == 6) return uColor6; if (i == 7) return uColor7;
+    if (i == 8) return uColor8; return uColor9;
+}
 
-    if (uMidPosition >= 0.0 && uMidPosition <= 1.0) {
-        vec3 colorMid = srgbToLinear(uColorMid);
-        if (t < uMidPosition) {
-            return mix(colorA, colorMid, t / uMidPosition);
-        } else {
-            return mix(colorMid, colorB, (t - uMidPosition) / (1.0 - uMidPosition));
-        }
-    } else {
-        return mix(colorA, colorB, t);
-    }
+vec4 gradientColor(float t) {
+    int count = int(uColorCount);
+    if (count < 2) count = 2; if (count > 10) count = 10;
+    float stopT = t * float(count - 1);
+    int idx = int(floor(stopT));
+    if (idx >= count - 1) idx = count - 2;
+    float frac = stopT - float(idx);
+    vec4 sA = getColorStop(idx); vec4 sB = getColorStop(idx + 1);
+    vec3 linA = srgbToLinear(sA.rgb); vec3 linB = srgbToLinear(sB.rgb);
+    vec4 pmA = vec4(linA * sA.a, sA.a); vec4 pmB = vec4(linB * sB.a, sB.a);
+    float blend;
+    if (uSoftness >= 0.999) { blend = frac; }
+    else if (uSoftness <= 0.001) { blend = step(0.5, frac); }
+    else { float edge = 0.5 * uSoftness; blend = smoothstep(0.5 - edge, 0.5 + edge, frac); }
+    return mix(pmA, pmB, blend);
 }
 
 // ============ NORMAL MAP FROM NOISE ============
 
 vec3 computeNormal(vec2 uv, float time, float bumpStrength) {
-    vec2 noiseCoord = uv * uCellScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uv * uCellScale;
     float eps = 0.01;
 
     float center = voronoise(noiseCoord, 1.0 - uNoiseBlend, uEdgeSmoothness, time);
@@ -233,13 +249,13 @@ void main() {
     float edgeAtten = edgeAttenuation(gradientT, uEdgeFade, uEdgeFadeMode);
 
     // Generate Voronoise
-    vec2 noiseCoord = uvAspect * uCellScale * uNoiseDensity / 10.0;
+    vec2 noiseCoord = uvAspect * uCellScale;
     // u controls regularity (0=irregular, 1=regular grid)
     // v controls smoothness (0=sharp cells, 1=smooth noise)
     float noise = voronoise(noiseCoord, 1.0 - uNoiseBlend, uEdgeSmoothness, time);
 
     // Apply anti-aliasing smoothing
-    float aaFactor = getAASmoothing(uv, uNoiseDensity);
+    float aaFactor = getAASmoothing(uv, uCellScale);
     noise = mix(noise, smoothstep(0.0, 1.0, noise), aaFactor);
 
     // Add ordered dither
@@ -249,8 +265,10 @@ void main() {
     float noiseMod = (noise - 0.5) * 2.0 * uNoiseIntensity * edgeAtten;
     float noisyT = clamp(gradientT + noiseMod + dither, 0.0, 1.0);
 
-    // Get gradient color
-    vec3 color = gradientColor(noisyT);
+    // Get gradient color (premultiplied alpha)
+    vec4 pmColor = gradientColor(noisyT);
+    float alpha = pmColor.a;
+    vec3 color = alpha > 0.001 ? pmColor.rgb / alpha : vec3(0.0);
 
     // Compute normal and apply lighting
     float attenuatedBump = uBumpStrength * edgeAtten;
@@ -270,5 +288,5 @@ void main() {
     color = linearToSrgb(color);
     color = clamp(color, 0.0, 1.0);
 
-    fragColor = vec4(color, 1.0);
+    fragColor = vec4(color * alpha, alpha);
 }

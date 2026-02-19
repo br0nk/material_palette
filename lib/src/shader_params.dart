@@ -60,8 +60,13 @@ class ShaderParams {
     final r = (color.r * 255.0).round().clamp(0, 255);
     final g = (color.g * 255.0).round().clamp(0, 255);
     final b = (color.b * 255.0).round().clamp(0, 255);
-    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'
-        .toUpperCase();
+    final a = (color.a * 255.0).round().clamp(0, 255);
+    final rgb =
+        '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
+    if (a < 255) {
+      return '${rgb}${a.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    }
+    return rgb.toUpperCase();
   }
 }
 
@@ -78,7 +83,7 @@ class ShaderUIDefaults {
 
 // ── Uniform layout ───────────────────────────────────────────────────────────
 
-enum UniformFieldType { float, color }
+enum UniformFieldType { float, color, colorRgba }
 
 /// A single uniform field in a shader's layout.
 class UniformField {
@@ -87,6 +92,7 @@ class UniformField {
 
   const UniformField(this.key, [this.type = UniformFieldType.float]);
   const UniformField.color(this.key) : type = UniformFieldType.color;
+  const UniformField.colorRgba(this.key) : type = UniformFieldType.colorRgba;
 }
 
 /// Ordered list of uniform fields after the standard header (width, height, time).
@@ -120,6 +126,13 @@ int setShaderUniforms(
         shader.setFloat(idx + 1, c.g);
         shader.setFloat(idx + 2, c.b);
         idx += 3;
+      case UniformFieldType.colorRgba:
+        final c = params.getColor(field.key);
+        shader.setFloat(idx, c.r);
+        shader.setFloat(idx + 1, c.g);
+        shader.setFloat(idx + 2, c.b);
+        shader.setFloat(idx + 3, c.a);
+        idx += 4;
     }
   }
   return idx;
@@ -151,11 +164,42 @@ abstract class ParamGroups {
     UniformField('animSpeed'),
   ];
 
+  /// Noise fields for non-gritty shaders (noiseDensity removed, absorbed into noiseScale).
+  static const noiseFields = [
+    UniformField('noiseIntensity'),
+    UniformField('ditherStrength'),
+    UniformField('animSpeed'),
+  ];
+
+  /// Noise fields for gritty shaders (keeps noiseDensity).
+  static const grittyNoiseFields = [
+    UniformField('noiseDensity'),
+    UniformField('noiseIntensity'),
+    UniformField('ditherStrength'),
+    UniformField('animSpeed'),
+  ];
+
   static const colorsFields = [
     UniformField.color('colorA'),
     UniformField.color('colorB'),
     UniformField.color('colorMid'),
     UniformField('midPosition'),
+  ];
+
+  /// RGBA color stops (10 stops x 4 floats each) + count + softness.
+  static const gradientColorsFields = [
+    UniformField.colorRgba('color0'),
+    UniformField.colorRgba('color1'),
+    UniformField.colorRgba('color2'),
+    UniformField.colorRgba('color3'),
+    UniformField.colorRgba('color4'),
+    UniformField.colorRgba('color5'),
+    UniformField.colorRgba('color6'),
+    UniformField.colorRgba('color7'),
+    UniformField.colorRgba('color8'),
+    UniformField.colorRgba('color9'),
+    UniformField('colorCount'),
+    UniformField('softness'),
   ];
 
   static const postProcessingFields = [
@@ -200,6 +244,45 @@ abstract class ParamGroups {
     'animSpeed': 0.5,
   };
 
+  /// Defaults for non-gritty noise (noiseDensity removed).
+  static const noiseDefaults = {
+    'noiseIntensity': 0.50,
+    'ditherStrength': 0.0,
+    'animSpeed': 0.5,
+  };
+
+  /// Defaults for gritty noise (keeps noiseDensity).
+  static const grittyNoiseDefaults = {
+    'noiseDensity': 160.0,
+    'noiseIntensity': 0.65,
+    'ditherStrength': 0.44,
+    'animSpeed': 0.0,
+  };
+
+  /// Default transparent color for unused gradient stops.
+  static const Color _transparentMid = Color(0x00808080);
+
+  /// Generate gradient color defaults for N colors.
+  static Map<String, Color> gradientColorDefaults(List<Color> activeColors) {
+    final colors = <String, Color>{};
+    for (int i = 0; i < 10; i++) {
+      colors['color$i'] =
+          i < activeColors.length ? activeColors[i] : _transparentMid;
+    }
+    return colors;
+  }
+
+  /// Generate gradient value defaults.
+  static Map<String, double> gradientColorValueDefaults({
+    required int colorCount,
+    double softness = 1.0,
+  }) {
+    return {
+      'colorCount': colorCount.toDouble(),
+      'softness': softness,
+    };
+  }
+
   static const postProcessingDefaults = {
     'exposure': 1.0,
     'contrast': 1.0,
@@ -242,6 +325,13 @@ abstract class ParamGroups {
     'animSpeed': SliderRange('Speed', min: 0.0, max: 2.0),
   };
 
+  /// Ranges for non-gritty noise (noiseDensity removed).
+  static const noiseRanges = {
+    'noiseIntensity': SliderRange('Intensity', min: 0.0, max: 1.0),
+    'ditherStrength': SliderRange('Dither', min: 0.0, max: 1.0),
+    'animSpeed': SliderRange('Speed', min: 0.0, max: 2.0),
+  };
+
   /// Gritty shaders have a wider density range.
   static const grittyNoiseRanges = {
     'noiseDensity': SliderRange('Density', min: 100.0, max: 2000.0),
@@ -252,6 +342,12 @@ abstract class ParamGroups {
 
   static const colorsRanges = {
     'midPosition': SliderRange('Mid Position', min: -1.0, max: 1.0),
+  };
+
+  /// Ranges for gradient color system.
+  static const gradientColorsRanges = {
+    'colorCount': SliderRange('Color Count', min: 2.0, max: 10.0),
+    'softness': SliderRange('Softness', min: 0.0, max: 1.0),
   };
 
   static const postProcessingRanges = {
