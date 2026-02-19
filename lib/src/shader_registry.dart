@@ -22,6 +22,8 @@ abstract class ShaderNames {
   static const String voronoise = 'Voronoise';
   static const String radialVoronoise = 'Voronoise Radial';
   static const String burn = 'Burn';
+  static const String radialBurn = 'Burn Radial';
+  static const String tapBurn = 'Burn Tap';
 }
 
 /// Data for a shader card
@@ -108,5 +110,13 @@ const List<ShaderCardData> allShaders = [
   ShaderCardData(
     title: ShaderNames.burn,
     description: 'Diagonal burn dissolve effect',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialBurn,
+    description: 'Radial burn dissolve from center',
+  ),
+  ShaderCardData(
+    title: ShaderNames.tapBurn,
+    description: 'Tap to create burn dissolve effects',
   ),
 ];

@@ -16,6 +16,8 @@ abstract class ShaderImageAssets {
   static const String ripples = 'assets/images/sunset.jpg';
   static const String taplets = 'assets/images/mountain.jpg';
   static const String burn = 'assets/images/sunset.jpg';
+  static const String radialBurn = 'assets/images/sunset.jpg';
+  static const String tapBurn = 'assets/images/mountain.jpg';
 }
 
 // ============ HELPERS ============
@@ -182,6 +184,10 @@ class ShaderCard extends StatelessWidget {
         return RadialVoronoiseGradientShaderCard(dimensions: dimensions);
       case ShaderNames.burn:
         return BurnShaderCard(dimensions: dimensions);
+      case ShaderNames.radialBurn:
+        return RadialBurnShaderCard(dimensions: dimensions);
+      case ShaderNames.tapBurn:
+        return TappableBurnShaderCard(dimensions: dimensions);
       default:
         return ShaderCardContent(
           width: dimensions.width,
@@ -1988,3 +1994,133 @@ class _BurnShaderCardState extends State<BurnShaderCard> {
   String _generatePreset() => PresetGenerator.shaderParams(_params);
 }
 
+class RadialBurnShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialBurnShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialBurnShaderCard> createState() => _RadialBurnShaderCardState();
+}
+
+class _RadialBurnShaderCardState extends State<RadialBurnShaderCard> {
+  ShaderParams _params = radialBurnShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialBurnShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialBurnShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.radialBurn,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialBurnShaderDef.defaults),
+          shaderName: 'Burn Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Burn Center'),
+            ControlSlider.fromRange(range: _ui['burnCenterX']!, value: _params.get('burnCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('burnCenterX', v))),
+            ControlSlider.fromRange(range: _ui['burnCenterY']!, value: _params.get('burnCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('burnCenterY', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Noise & Edge'),
+            ControlSlider.fromRange(range: _ui['burnScale']!, value: _params.get('burnScale'), onChanged: (v) => setState(() => _params = _params.withValue('burnScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['glowIntensity']!, value: _params.get('glowIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('glowIntensity', v))),
+            ControlColorPicker(label: 'Fire Color', color: _params.getColor('fireColor'), onChanged: (c) => setState(() => _params = _params.withColor('fireColor', c))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class TappableBurnShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const TappableBurnShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<TappableBurnShaderCard> createState() => _TappableBurnShaderCardState();
+}
+
+class _TappableBurnShaderCardState extends State<TappableBurnShaderCard> {
+  ShaderParams _params = tappableBurnShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => tappableBurnShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: TappableBurnShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.tapBurn,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = tappableBurnShaderDef.defaults),
+          shaderName: 'Burn Tap',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Burn Properties'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['glowIntensity']!, value: _params.get('glowIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('glowIntensity', v))),
+            ControlColorPicker(label: 'Fire Color', color: _params.getColor('fireColor'), onChanged: (c) => setState(() => _params = _params.withColor('fireColor', c))),
+            ControlSlider.fromRange(range: _ui['burnRadius']!, value: _params.get('burnRadius'), onChanged: (v) => setState(() => _params = _params.withValue('burnRadius', v))),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['burnLifetime']!, value: _params.get('burnLifetime'), onChanged: (v) => setState(() => _params = _params.withValue('burnLifetime', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}

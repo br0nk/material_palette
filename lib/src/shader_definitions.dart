@@ -873,6 +873,58 @@ final burnShaderDef = ShaderDefinition(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// RADIAL BURN SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final radialBurnShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Radial burn has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'burnCenterX': 0.5, 'burnCenterY': 0.5, 'burnScale': 1.5,
+      'noiseScale': 15.0, 'edgeWidth': 0.5, 'glowIntensity': 0.5,
+      'speed': 0.1,
+    },
+    colors: {
+      'fireColor': const Color.fromRGBO(255, 127, 0, 1),
+    },
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'burnCenterX': const SliderRange('Center X', min: 0.0, max: 1.0),
+    'burnCenterY': const SliderRange('Center Y', min: 0.0, max: 1.0),
+    'burnScale': const SliderRange('Burn Scale', min: 0.5, max: 3.0),
+    'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
+    'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
+    'speed': const SliderRange('Speed', min: 0.01, max: 1.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAPPABLE BURN SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final tappableBurnShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Tappable burn has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'noiseScale': 15.0, 'edgeWidth': 0.5, 'glowIntensity': 0.5,
+      'speed': 1.0, 'burnRadius': 1.5, 'burnLifetime': 3.0,
+    },
+    colors: {
+      'fireColor': const Color.fromRGBO(255, 127, 0, 1),
+    },
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
+    'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
+    'speed': const SliderRange('Speed', min: 0.1, max: 3.0),
+    'burnRadius': const SliderRange('Burn Radius', min: 0.5, max: 3.0),
+    'burnLifetime': const SliderRange('Lifetime', min: 1.0, max: 8.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // REGISTRY: maps ShaderMaterialType → ShaderDefinition
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -915,4 +967,6 @@ Map<String, ShaderDefinition> get shaderDefinitionsByName => {
   ShaderNames.ripples: rippleShaderDef,
   ShaderNames.taplets: clickRippleShaderDef,
   ShaderNames.burn: burnShaderDef,
+  ShaderNames.radialBurn: radialBurnShaderDef,
+  ShaderNames.tapBurn: tappableBurnShaderDef,
 };

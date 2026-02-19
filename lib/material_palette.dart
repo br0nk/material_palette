@@ -29,3 +29,5 @@ export 'package:material_palette/src/shaders/marble_smear_shader_fill.dart';
 export 'package:material_palette/src/shaders/ripple_shader_wrap.dart';
 export 'package:material_palette/src/shaders/clickable_ripple_shader_wrap.dart';
 export 'package:material_palette/src/shaders/burn_shader_wrap.dart';
+export 'package:material_palette/src/shaders/radial_burn_shader_wrap.dart';
+export 'package:material_palette/src/shaders/tappable_burn_shader_wrap.dart';

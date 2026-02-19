@@ -30,6 +30,8 @@ dev_dependencies:
 flutter:
   shaders:
     - lib/shaders/burn.frag
+    - lib/shaders/radial_burn.frag
+    - lib/shaders/tappable_burn.frag
     - lib/shaders/click_ripple.frag
     - lib/shaders/fbm_gradient.frag
     - lib/shaders/gritty_gradient.frag
