@@ -21,6 +21,7 @@ abstract class ShaderNames {
   static const String radialVoronoi = 'Voronoi Radial';
   static const String voronoise = 'Voronoise';
   static const String radialVoronoise = 'Voronoise Radial';
+  static const String burn = 'Burn';
 }
 
 /// Data for a shader card
@@ -103,5 +104,9 @@ const List<ShaderCardData> allShaders = [
   ShaderCardData(
     title: ShaderNames.radialVoronoise,
     description: 'Radial Voronoise gradient',
+  ),
+  ShaderCardData(
+    title: ShaderNames.burn,
+    description: 'Diagonal burn dissolve effect',
   ),
 ];

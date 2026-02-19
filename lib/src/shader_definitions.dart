@@ -847,6 +847,32 @@ final clickRippleShaderDef = ShaderDefinition(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// BURN SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final burnShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Burn has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'dirX': 1.0, 'dirY': 0.5,
+      'noiseScale': 15.0, 'edgeWidth': 0.5, 'glowIntensity': 0.5,
+      'speed': 0.1,
+    },
+    colors: {
+      'fireColor': const Color.fromRGBO(255, 127, 0, 1),
+    },
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'dirX': const SliderRange('Direction X', min: -1.0, max: 1.0),
+    'dirY': const SliderRange('Direction Y', min: -1.0, max: 1.0),
+    'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
+    'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
+    'speed': const SliderRange('Speed', min: 0.01, max: 1.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // REGISTRY: maps ShaderMaterialType → ShaderDefinition
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -888,4 +914,5 @@ Map<String, ShaderDefinition> get shaderDefinitionsByName => {
   ShaderNames.smarble: marbleSmearShaderDef,
   ShaderNames.ripples: rippleShaderDef,
   ShaderNames.taplets: clickRippleShaderDef,
+  ShaderNames.burn: burnShaderDef,
 };

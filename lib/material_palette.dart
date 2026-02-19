@@ -28,3 +28,4 @@ export 'package:material_palette/src/shaders/marble_smear_shader_fill.dart';
 // Wraps (post-processing effects)
 export 'package:material_palette/src/shaders/ripple_shader_wrap.dart';
 export 'package:material_palette/src/shaders/clickable_ripple_shader_wrap.dart';
+export 'package:material_palette/src/shaders/burn_shader_wrap.dart';
