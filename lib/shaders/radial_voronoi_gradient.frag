@@ -156,12 +156,6 @@ vec3 voronoiSmooth(vec2 p, float jitter, float distType, float smoothness, float
     vec2 n = floor(p);
     vec2 f = fract(p);
 
-    // Use time slices for smooth interpolation
-    float timeSlice = time * 0.5;
-    float t0 = floor(timeSlice);
-    float t1 = t0 + 1.0;
-    float blend = smoothstep(0.0, 1.0, fract(timeSlice));
-
     // For smooth F1: accumulate weighted distances
     float smoothF1 = 0.0;
     float totalWeight = 0.0;
@@ -179,10 +173,8 @@ vec3 voronoiSmooth(vec2 p, float jitter, float distType, float smoothness, float
         for (int i = -2; i <= 2; i++) {
             vec2 neighbor = vec2(float(i), float(j));
 
-            // Get cell positions at two time slices and interpolate
-            vec3 cellHash0 = hash33(vec3(n + neighbor, t0));
-            vec3 cellHash1 = hash33(vec3(n + neighbor, t1));
-            vec2 cellHash = mix(cellHash0.xy, cellHash1.xy, blend);
+            // Continuous time evolution - cell positions drift smoothly
+            vec2 cellHash = hash33(vec3(n + neighbor, time * 0.1)).xy;
 
             // Apply jitter to cell point
             vec2 point = 0.5 + jitter * (cellHash - 0.5);
@@ -334,7 +326,7 @@ void main() {
     vec2 uv = fragCoord / uSize;
     float aspect = uSize.x / uSize.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
-    float time = uTime * uAnimSpeed;
+    float time = uTime * uAnimSpeed * 0.02;
 
     // Calculate base radial gradient position
     float gradientT = calculateRadialGradient(uv);

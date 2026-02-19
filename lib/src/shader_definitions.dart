@@ -507,7 +507,7 @@ final voronoiGradientDef = ShaderDefinition(
     values: {
       'gradientAngle': 84.68, 'gradientScale': 0.73, 'gradientOffset': 0.22,
       'noiseIntensity': 0.12, 'ditherStrength': 0.02,
-      'animSpeed': 1.27,
+      'animSpeed': 0.5,
       'cellScale': 20.3, 'cellJitter': 1.0, 'distanceType': 0.45,
       'outputMode': 0.0, 'cellSmoothness': 0.54,
       'colorCount': 3.0, 'softness': 1.0,
@@ -529,6 +529,7 @@ final voronoiGradientDef = ShaderDefinition(
   uiDefaults: ShaderUIDefaults({
     ...ParamGroups.linearGradientRanges,
     ...ParamGroups.noiseRanges,
+    'animSpeed': const SliderRange('Speed', min: 0.0, max: 1.0),
     'cellScale': const SliderRange('Cell Scale', min: 1.0, max: 80.0),
     'cellJitter': const SliderRange('Cell Jitter', min: 0.0, max: 1.0),
     'distanceType': const SliderRange('Distance', min: 0.0, max: 2.0),
@@ -563,7 +564,7 @@ final radialVoronoiGradientDef = ShaderDefinition(
       'gradientCenterX': 0.50, 'gradientCenterY': 0.36,
       'gradientScale': 0.80, 'gradientOffset': 0.0,
       'noiseIntensity': 0.26, 'ditherStrength': 0.0,
-      'animSpeed': 0.65,
+      'animSpeed': 0.5,
       'cellScale': 14.8, 'cellJitter': 0.07, 'distanceType': 0.0,
       'outputMode': 0.0, 'cellSmoothness': 0.50,
       'colorCount': 3.0, 'softness': 1.0,
@@ -585,6 +586,7 @@ final radialVoronoiGradientDef = ShaderDefinition(
   uiDefaults: ShaderUIDefaults({
     ...ParamGroups.radialGradientRanges,
     ...ParamGroups.noiseRanges,
+    'animSpeed': const SliderRange('Speed', min: 0.0, max: 1.0),
     'cellScale': const SliderRange('Cell Scale', min: 1.0, max: 80.0),
     'cellJitter': const SliderRange('Cell Jitter', min: 0.0, max: 1.0),
     'distanceType': const SliderRange('Distance', min: 0.0, max: 2.0),
@@ -636,6 +638,7 @@ final voronoiseGradientDef = ShaderDefinition(
   uiDefaults: ShaderUIDefaults({
     ...ParamGroups.linearGradientRanges,
     ...ParamGroups.noiseRanges,
+    'animSpeed': const SliderRange('Speed', min: 0.0, max: 1.0),
     'cellScale': const SliderRange('Cell Scale', min: 1.0, max: 100.0),
     'noiseBlend': const SliderRange('Noise Blend', min: 0.0, max: 1.0),
     'edgeSmoothness': const SliderRange('Edge Smooth', min: 0.0, max: 1.0),
@@ -687,6 +690,7 @@ final radialVoronoiseGradientDef = ShaderDefinition(
   uiDefaults: ShaderUIDefaults({
     ...ParamGroups.radialGradientRanges,
     ...ParamGroups.noiseRanges,
+    'animSpeed': const SliderRange('Speed', min: 0.0, max: 1.0),
     'cellScale': const SliderRange('Cell Scale', min: 1.0, max: 100.0),
     'noiseBlend': const SliderRange('Noise Blend', min: 0.0, max: 1.0),
     'edgeSmoothness': const SliderRange('Edge Smooth', min: 0.0, max: 1.0),

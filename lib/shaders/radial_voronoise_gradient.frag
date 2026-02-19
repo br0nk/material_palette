@@ -237,7 +237,7 @@ void main() {
     vec2 uv = fragCoord / uSize;
     float aspect = uSize.x / uSize.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
-    float time = uTime * uAnimSpeed;
+    float time = uTime * uAnimSpeed * 0.02;
 
     // Calculate base radial gradient position
     float gradientT = calculateRadialGradient(uv);
