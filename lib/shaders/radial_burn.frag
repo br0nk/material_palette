@@ -89,18 +89,27 @@ void main() {
 
     // Burn line: radial distance + fbm noise distortion
     float noiseVal = fbmNoise(uv * uNoiseScale);
+
+    // Compute max radial distance so the burn starts and ends fully
+    // off-screen (no residual glow/edge visible at progress 0 or 1).
+    float edgeThickness = 0.06;
+    float glowWidth = 0.12;
+    float margin = edgeThickness + glowWidth;
+
+    float maxDeltaX = max(uBurnCenterX, 1.0 - uBurnCenterX) * aspect;
+    float maxDeltaY = max(uBurnCenterY, 1.0 - uBurnCenterY);
+    float maxBase = sqrt(maxDeltaX * maxDeltaX + maxDeltaY * maxDeltaY)
+                    / (0.5 * uBurnScale);
+    float offset = margin + uEdgeWidth;
+    float sweepRange = maxBase + 2.0 * uEdgeWidth + 2.0 * margin;
+
     float d = normalizedDist + uEdgeWidth * (noiseVal - 0.5) * 2.0
-              - progress * (1.0 + uEdgeWidth);
+              + offset - progress * sweepRange;
 
     // Sample child texture
     vec4 tex = texture(uTexture, uv);
 
-    // Edge threshold: smoothstep for soft burn edge
-    float edgeThickness = 0.06;
     float burnMask = smoothstep(-edgeThickness, edgeThickness, d);
-
-    // Fire glow at the edge
-    float glowWidth = 0.12;
     float glow = smoothstep(-glowWidth - edgeThickness, -edgeThickness, d)
                * (1.0 - burnMask);
 

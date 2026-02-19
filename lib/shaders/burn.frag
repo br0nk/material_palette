@@ -86,18 +86,25 @@ void main() {
 
     // Burn line: directional gradient + fbm noise distortion
     float noiseVal = fbmNoise(uv * uNoiseScale);
+
+    // Compute gradient range for this direction so the burn starts and ends
+    // fully off-screen (no residual glow/edge visible at progress 0 or 1).
+    float edgeThickness = 0.06;
+    float glowWidth = 0.12;
+    float margin = edgeThickness + glowWidth;
+
+    float minBase = min(dir.x, 0.0) + min(dir.y, 0.0);
+    float maxBase = max(dir.x, 0.0) + max(dir.y, 0.0);
+    float offset = margin + uEdgeWidth - minBase;
+    float sweepRange = maxBase - minBase + 2.0 * uEdgeWidth + 2.0 * margin;
+
     float d = dot(uv, dir) + uEdgeWidth * (noiseVal - 0.5) * 2.0
-              - progress * (1.0 + uEdgeWidth);
+              + offset - progress * sweepRange;
 
     // Sample child texture
     vec4 tex = texture(uTexture, uv);
 
-    // Edge threshold: smoothstep for soft burn edge
-    float edgeThickness = 0.06;
     float burnMask = smoothstep(-edgeThickness, edgeThickness, d);
-
-    // Fire glow at the edge
-    float glowWidth = 0.12;
     float glow = smoothstep(-glowWidth - edgeThickness, -edgeThickness, d)
                * (1.0 - burnMask);
 

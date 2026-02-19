@@ -76,6 +76,13 @@ void main() {
     // Evaluate FBM noise once (position-dependent, not tap-dependent)
     float noiseVal = fbmNoise(uv * uNoiseScale);
 
+    // Margin so each tap's burn starts and ends fully invisible
+    float edgeThickness = 0.06;
+    float glowWidth = 0.12;
+    float margin = edgeThickness + glowWidth;
+    float offset = margin + uEdgeWidth;
+    float sweepRange = 1.0 + 2.0 * uEdgeWidth + 2.0 * margin;
+
     // Find minimum burn distance across all active taps
     float minD = 999.0;
 
@@ -101,7 +108,7 @@ void main() {
 
         // Per-tap burn distance
         float d_i = normalizedDist + uEdgeWidth * (noiseVal - 0.5) * 2.0
-                    - tapProgress * (1.0 + uEdgeWidth);
+                    + offset - tapProgress * sweepRange;
         minD = min(minD, d_i);
     }
 
@@ -114,12 +121,7 @@ void main() {
         return;
     }
 
-    // Edge threshold: smoothstep for soft burn edge
-    float edgeThickness = 0.06;
     float burnMask = smoothstep(-edgeThickness, edgeThickness, minD);
-
-    // Fire glow at the edge
-    float glowWidth = 0.12;
     float glow = smoothstep(-glowWidth - edgeThickness, -edgeThickness, minD)
                * (1.0 - burnMask);
 

@@ -919,7 +919,7 @@ final tappableBurnShaderDef = ShaderDefinition(
     'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
     'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
     'speed': const SliderRange('Speed', min: 0.1, max: 3.0),
-    'burnRadius': const SliderRange('Burn Radius', min: 0.5, max: 3.0),
+    'burnRadius': const SliderRange('Burn Radius', min: 0.001, max: 3.0),
     'burnLifetime': const SliderRange('Lifetime', min: 1.0, max: 8.0),
   }),
 );
