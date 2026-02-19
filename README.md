@@ -21,6 +21,11 @@ A collection of **material effects** implemented with shaders for Flutter.
 - **Ripple** - Animated wave distortion (wrap)
 - **Clickable Ripple** - Tap-triggered ripple effects (wrap)
 
+### Burn Effects
+- **Burn** - Directional burn dissolve with animated fire edge (wrap)
+- **Burn Radial** - Radial burn dissolve expanding from a center point (wrap)
+- **Burn Tap** - Tap to create up to 10 simultaneous burn dissolve effects (wrap)
+
 ## Installation
 
 Add to your `pubspec.yaml`:
@@ -57,6 +62,10 @@ flutter:
     - packages/material_palette/shaders/marble_smear.frag
     - packages/material_palette/shaders/ripple.frag
     - packages/material_palette/shaders/click_ripple.frag
+    # Burn effects
+    - packages/material_palette/shaders/burn.frag
+    - packages/material_palette/shaders/radial_burn.frag
+    - packages/material_palette/shaders/tappable_burn.frag
 ```
 
 ## Quick Start
@@ -142,6 +151,9 @@ GrittyGradientShaderFill(
 | `MarbleSmearShaderFill` | Fill | Marble with drag smudge |
 | `RippleShaderWrap` | Wrap | Animated wave distortion |
 | `ClickableRippleShaderWrap` | Wrap | Tap-triggered ripples |
+| `BurnShaderWrap` | Wrap | Directional burn dissolve |
+| `RadialBurnShaderWrap` | Wrap | Radial burn dissolve from center |
+| `TappableBurnShaderWrap` | Wrap | Tap-triggered burn dissolves |
 
 ## Running the Demo
 
