@@ -854,9 +854,9 @@ final burnShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Burn has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'dirX': 1.0, 'dirY': 0.5,
-      'noiseScale': 15.0, 'edgeWidth': 0.5, 'glowIntensity': 0.5,
-      'speed': 0.1,
+      'dirX': -0.00, 'dirY': 0.06,
+      'noiseScale': 8.85, 'edgeWidth': 0.18, 'glowIntensity': 3.56,
+      'speed': 0.30,
     },
     colors: {
       'fireColor': const Color.fromRGBO(255, 127, 0, 1),
@@ -880,12 +880,12 @@ final radialBurnShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Radial burn has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'burnCenterX': 0.5, 'burnCenterY': 0.5, 'burnScale': 1.5,
-      'noiseScale': 15.0, 'edgeWidth': 0.5, 'glowIntensity': 0.5,
-      'speed': 0.1,
+      'burnCenterX': 0.83, 'burnCenterY': 0.81, 'burnScale': 0.78,
+      'noiseScale': 3.82, 'edgeWidth': 0.50, 'glowIntensity': 4.41,
+      'speed': 0.12,
     },
     colors: {
-      'fireColor': const Color.fromRGBO(255, 127, 0, 1),
+      'fireColor': const Color.fromRGBO(81, 77, 75, 1),
     },
   ),
   uiDefaults: ShaderUIDefaults({
@@ -907,8 +907,8 @@ final tappableBurnShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Tappable burn has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'noiseScale': 21.68, 'edgeWidth': 1.0, 'glowIntensity': 4.01,
-      'speed': 1.76, 'burnRadius': 0.50, 'burnLifetime': 1.55,
+      'noiseScale': 18.29, 'edgeWidth': 1.0, 'glowIntensity': 4.01,
+      'speed': 0.89, 'burnRadius': 0.16, 'burnLifetime': 1.55,
     },
     colors: {
       'fireColor': const Color.fromRGBO(255, 226, 198, 1),
