@@ -907,11 +907,11 @@ final tappableBurnShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Tappable burn has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'noiseScale': 15.0, 'edgeWidth': 0.5, 'glowIntensity': 0.5,
-      'speed': 1.0, 'burnRadius': 1.5, 'burnLifetime': 3.0,
+      'noiseScale': 21.68, 'edgeWidth': 1.0, 'glowIntensity': 4.01,
+      'speed': 1.76, 'burnRadius': 0.50, 'burnLifetime': 1.55,
     },
     colors: {
-      'fireColor': const Color.fromRGBO(255, 127, 0, 1),
+      'fireColor': const Color.fromRGBO(255, 226, 198, 1),
     },
   ),
   uiDefaults: ShaderUIDefaults({
