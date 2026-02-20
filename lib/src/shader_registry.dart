@@ -24,6 +24,9 @@ abstract class ShaderNames {
   static const String burn = 'Burn';
   static const String radialBurn = 'Burn Radial';
   static const String tapBurn = 'Burn Tap';
+  static const String smoke = 'Smoke';
+  static const String radialSmoke = 'Smoke Radial';
+  static const String tapSmoke = 'Smoke Tap';
 }
 
 /// Data for a shader card
@@ -118,5 +121,17 @@ const List<ShaderCardData> allShaders = [
   ShaderCardData(
     title: ShaderNames.tapBurn,
     description: 'Tap to create burn dissolve effects',
+  ),
+  ShaderCardData(
+    title: ShaderNames.smoke,
+    description: 'Directional smoke dissolve effect',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialSmoke,
+    description: 'Radial smoke dissolve from center',
+  ),
+  ShaderCardData(
+    title: ShaderNames.tapSmoke,
+    description: 'Tap to create smoke dissolve effects',
   ),
 ];

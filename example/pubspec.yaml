@@ -26,6 +26,9 @@ flutter:
     - packages/material_palette/shaders/burn.frag
     - packages/material_palette/shaders/radial_burn.frag
     - packages/material_palette/shaders/tappable_burn.frag
+    - packages/material_palette/shaders/smoke.frag
+    - packages/material_palette/shaders/radial_smoke.frag
+    - packages/material_palette/shaders/tappable_smoke.frag
     - packages/material_palette/shaders/ripple.frag
     - packages/material_palette/shaders/click_ripple.frag
     - packages/material_palette/shaders/marble_smear.frag

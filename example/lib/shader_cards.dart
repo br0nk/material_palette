@@ -18,6 +18,9 @@ abstract class ShaderImageAssets {
   static const String burn = 'assets/images/sunset.jpg';
   static const String radialBurn = 'assets/images/sunset.jpg';
   static const String tapBurn = 'assets/images/mountain.jpg';
+  static const String smoke = 'assets/images/sunset.jpg';
+  static const String radialSmoke = 'assets/images/sunset.jpg';
+  static const String tapSmoke = 'assets/images/mountain.jpg';
 }
 
 // ============ HELPERS ============
@@ -188,6 +191,12 @@ class ShaderCard extends StatelessWidget {
         return RadialBurnShaderCard(dimensions: dimensions);
       case ShaderNames.tapBurn:
         return TappableBurnShaderCard(dimensions: dimensions);
+      case ShaderNames.smoke:
+        return SmokeShaderCard(dimensions: dimensions);
+      case ShaderNames.radialSmoke:
+        return RadialSmokeShaderCard(dimensions: dimensions);
+      case ShaderNames.tapSmoke:
+        return TappableSmokeShaderCard(dimensions: dimensions);
       default:
         return ShaderCardContent(
           width: dimensions.width,
@@ -2111,6 +2120,203 @@ class _TappableBurnShaderCardState extends State<TappableBurnShaderCard> {
             ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
             ControlSlider.fromRange(range: _ui['glowIntensity']!, value: _params.get('glowIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('glowIntensity', v))),
             ControlColorPicker(label: 'Fire Color', color: _params.getColor('fireColor'), onChanged: (c) => setState(() => _params = _params.withColor('fireColor', c))),
+            ControlSlider.fromRange(range: _ui['burnRadius']!, value: _params.get('burnRadius'), onChanged: (v) => setState(() => _params = _params.withValue('burnRadius', v))),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['burnLifetime']!, value: _params.get('burnLifetime'), onChanged: (v) => setState(() => _params = _params.withValue('burnLifetime', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class SmokeShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const SmokeShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<SmokeShaderCard> createState() => _SmokeShaderCardState();
+}
+
+class _SmokeShaderCardState extends State<SmokeShaderCard> {
+  ShaderParams _params = smokeShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => smokeShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: SmokeShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.smoke,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = smokeShaderDef.defaults),
+          shaderName: 'Smoke',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Smoke Direction'),
+            ControlSlider.fromRange(range: _ui['dirX']!, value: _params.get('dirX'), onChanged: (v) => setState(() => _params = _params.withValue('dirX', v))),
+            ControlSlider.fromRange(range: _ui['dirY']!, value: _params.get('dirY'), onChanged: (v) => setState(() => _params = _params.withValue('dirY', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Noise & Edge'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['glowIntensity']!, value: _params.get('glowIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('glowIntensity', v))),
+            ControlColorPicker(label: 'Smoke Color', color: _params.getColor('smokeColor'), onChanged: (c) => setState(() => _params = _params.withColor('smokeColor', c))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialSmokeShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialSmokeShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialSmokeShaderCard> createState() => _RadialSmokeShaderCardState();
+}
+
+class _RadialSmokeShaderCardState extends State<RadialSmokeShaderCard> {
+  ShaderParams _params = radialSmokeShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialSmokeShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialSmokeShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.radialSmoke,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialSmokeShaderDef.defaults),
+          shaderName: 'Smoke Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Smoke Center'),
+            ControlSlider.fromRange(range: _ui['burnCenterX']!, value: _params.get('burnCenterX'), onChanged: (v) => setState(() => _params = _params.withValue('burnCenterX', v))),
+            ControlSlider.fromRange(range: _ui['burnCenterY']!, value: _params.get('burnCenterY'), onChanged: (v) => setState(() => _params = _params.withValue('burnCenterY', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Noise & Edge'),
+            ControlSlider.fromRange(range: _ui['burnScale']!, value: _params.get('burnScale'), onChanged: (v) => setState(() => _params = _params.withValue('burnScale', v))),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['glowIntensity']!, value: _params.get('glowIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('glowIntensity', v))),
+            ControlColorPicker(label: 'Smoke Color', color: _params.getColor('smokeColor'), onChanged: (c) => setState(() => _params = _params.withColor('smokeColor', c))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class TappableSmokeShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const TappableSmokeShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<TappableSmokeShaderCard> createState() => _TappableSmokeShaderCardState();
+}
+
+class _TappableSmokeShaderCardState extends State<TappableSmokeShaderCard> {
+  ShaderParams _params = tappableSmokeShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => tappableSmokeShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: TappableSmokeShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.tapSmoke,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = tappableSmokeShaderDef.defaults),
+          shaderName: 'Smoke Tap',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Smoke Properties'),
+            ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['glowIntensity']!, value: _params.get('glowIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('glowIntensity', v))),
+            ControlColorPicker(label: 'Smoke Color', color: _params.getColor('smokeColor'), onChanged: (c) => setState(() => _params = _params.withColor('smokeColor', c))),
             ControlSlider.fromRange(range: _ui['burnRadius']!, value: _params.get('burnRadius'), onChanged: (v) => setState(() => _params = _params.withValue('burnRadius', v))),
             ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
             const SizedBox(height: 12),

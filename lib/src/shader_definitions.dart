@@ -925,6 +925,84 @@ final tappableBurnShaderDef = ShaderDefinition(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SMOKE SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final smokeShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Smoke has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'dirX': -0.00, 'dirY': 0.06,
+      'noiseScale': 6.0, 'edgeWidth': 0.25, 'glowIntensity': 2.5,
+      'speed': 0.20,
+    },
+    colors: {
+      'smokeColor': const Color.fromRGBO(200, 200, 210, 1),
+    },
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'dirX': const SliderRange('Direction X', min: -1.0, max: 1.0),
+    'dirY': const SliderRange('Direction Y', min: -1.0, max: 1.0),
+    'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
+    'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
+    'speed': const SliderRange('Speed', min: 0.01, max: 1.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RADIAL SMOKE SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final radialSmokeShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Radial smoke has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'burnCenterX': 0.50, 'burnCenterY': 0.50, 'burnScale': 1.0,
+      'noiseScale': 5.0, 'edgeWidth': 0.40, 'glowIntensity': 2.8,
+      'speed': 0.15,
+    },
+    colors: {
+      'smokeColor': const Color.fromRGBO(180, 185, 195, 1),
+    },
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'burnCenterX': const SliderRange('Center X', min: 0.0, max: 1.0),
+    'burnCenterY': const SliderRange('Center Y', min: 0.0, max: 1.0),
+    'burnScale': const SliderRange('Burn Scale', min: 0.5, max: 3.0),
+    'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
+    'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
+    'speed': const SliderRange('Speed', min: 0.01, max: 1.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAPPABLE SMOKE SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final tappableSmokeShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Tappable smoke has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'noiseScale': 12.0, 'edgeWidth': 0.8, 'glowIntensity': 3.0,
+      'speed': 0.70, 'burnRadius': 0.20, 'burnLifetime': 2.0,
+    },
+    colors: {
+      'smokeColor': const Color.fromRGBO(220, 220, 230, 1),
+    },
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
+    'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
+    'speed': const SliderRange('Speed', min: 0.1, max: 3.0),
+    'burnRadius': const SliderRange('Burn Radius', min: 0.001, max: 3.0),
+    'burnLifetime': const SliderRange('Lifetime', min: 1.0, max: 8.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // REGISTRY: maps ShaderMaterialType → ShaderDefinition
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -969,4 +1047,7 @@ Map<String, ShaderDefinition> get shaderDefinitionsByName => {
   ShaderNames.burn: burnShaderDef,
   ShaderNames.radialBurn: radialBurnShaderDef,
   ShaderNames.tapBurn: tappableBurnShaderDef,
+  ShaderNames.smoke: smokeShaderDef,
+  ShaderNames.radialSmoke: radialSmokeShaderDef,
+  ShaderNames.tapSmoke: tappableSmokeShaderDef,
 };
