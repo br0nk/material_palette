@@ -22,6 +22,8 @@ abstract class ShaderImageAssets {
   static const String radialSmoke = 'assets/images/sunset.jpg';
   static const String tapSmoke = 'assets/images/mountain.jpg';
   static const String pixelDissolve = 'assets/images/sunset.jpg';
+  static const String radialPixelDissolve = 'assets/images/sunset.jpg';
+  static const String tapPixelDissolve = 'assets/images/mountain.jpg';
 }
 
 // ============ HELPERS ============
@@ -200,6 +202,10 @@ class ShaderCard extends StatelessWidget {
         return TappableSmokeShaderCard(dimensions: dimensions);
       case ShaderNames.pixelDissolve:
         return PixelDissolveShaderCard(dimensions: dimensions);
+      case ShaderNames.radialPixelDissolve:
+        return RadialPixelDissolveShaderCard(dimensions: dimensions);
+      case ShaderNames.tapPixelDissolve:
+        return TappablePixelDissolveShaderCard(dimensions: dimensions);
       default:
         return ShaderCardContent(
           width: dimensions.width,
@@ -2391,6 +2397,137 @@ class _PixelDissolveShaderCardState extends State<PixelDissolveShaderCard> {
             const SizedBox(height: 12),
             const ControlSectionTitle('Timing'),
             ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class RadialPixelDissolveShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const RadialPixelDissolveShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<RadialPixelDissolveShaderCard> createState() => _RadialPixelDissolveShaderCardState();
+}
+
+class _RadialPixelDissolveShaderCardState extends State<RadialPixelDissolveShaderCard> {
+  ShaderParams _params = radialPixelDissolveShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => radialPixelDissolveShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: RadialPixelDissolveShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.radialPixelDissolve,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = radialPixelDissolveShaderDef.defaults),
+          shaderName: 'Pixel Dissolve Radial',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Dissolve Center'),
+            ControlSlider.fromRange(range: _ui['centerX']!, value: _params.get('centerX'), onChanged: (v) => setState(() => _params = _params.withValue('centerX', v))),
+            ControlSlider.fromRange(range: _ui['centerY']!, value: _params.get('centerY'), onChanged: (v) => setState(() => _params = _params.withValue('centerY', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Pixel Properties'),
+            ControlSlider.fromRange(range: _ui['scale']!, value: _params.get('scale'), onChanged: (v) => setState(() => _params = _params.withValue('scale', v))),
+            ControlSlider.fromRange(range: _ui['pixelSize']!, value: _params.get('pixelSize'), onChanged: (v) => setState(() => _params = _params.withValue('pixelSize', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['scatter']!, value: _params.get('scatter'), onChanged: (v) => setState(() => _params = _params.withValue('scatter', v))),
+            ControlSlider.fromRange(range: _ui['noiseAmount']!, value: _params.get('noiseAmount'), onChanged: (v) => setState(() => _params = _params.withValue('noiseAmount', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _generatePreset() => PresetGenerator.shaderParams(_params);
+}
+
+class TappablePixelDissolveShaderCard extends StatefulWidget {
+  final CardDimensions dimensions;
+
+  const TappablePixelDissolveShaderCard({super.key, required this.dimensions});
+
+  @override
+  State<TappablePixelDissolveShaderCard> createState() => _TappablePixelDissolveShaderCardState();
+}
+
+class _TappablePixelDissolveShaderCardState extends State<TappablePixelDissolveShaderCard> {
+  ShaderParams _params = tappablePixelDissolveShaderDef.defaults;
+  bool _showControls = false;
+
+  ShaderUIDefaults get _ui => tappablePixelDissolveShaderDef.uiDefaults;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimensions = widget.dimensions;
+    final controlsHeight = calculateControlsHeight(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShaderCardContent(
+          width: dimensions.width,
+          height: dimensions.height,
+          child: TappablePixelDissolveShaderWrap(
+            params: _params,
+            child: Image.asset(
+              ShaderImageAssets.tapPixelDissolve,
+              fit: BoxFit.cover,
+              width: dimensions.width,
+              height: dimensions.height,
+            ),
+          ),
+        ),
+        ShaderControlsPanel(
+          showControls: _showControls,
+          onToggle: () => setState(() => _showControls = !_showControls),
+          controlsWidth: dimensions.controlsWidth,
+          controlsHeight: controlsHeight,
+          onReset: () => setState(() => _params = tappablePixelDissolveShaderDef.defaults),
+          shaderName: 'Pixel Dissolve Tap',
+          onCopyPreset: () => _generatePreset(),
+          children: [
+            const ControlSectionTitle('Pixel Properties'),
+            ControlSlider.fromRange(range: _ui['pixelSize']!, value: _params.get('pixelSize'), onChanged: (v) => setState(() => _params = _params.withValue('pixelSize', v))),
+            ControlSlider.fromRange(range: _ui['edgeWidth']!, value: _params.get('edgeWidth'), onChanged: (v) => setState(() => _params = _params.withValue('edgeWidth', v))),
+            ControlSlider.fromRange(range: _ui['scatter']!, value: _params.get('scatter'), onChanged: (v) => setState(() => _params = _params.withValue('scatter', v))),
+            ControlSlider.fromRange(range: _ui['noiseAmount']!, value: _params.get('noiseAmount'), onChanged: (v) => setState(() => _params = _params.withValue('noiseAmount', v))),
+            ControlSlider.fromRange(range: _ui['radius']!, value: _params.get('radius'), onChanged: (v) => setState(() => _params = _params.withValue('radius', v))),
+            ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
+            const SizedBox(height: 12),
+            const ControlSectionTitle('Timing'),
+            ControlSlider.fromRange(range: _ui['lifetime']!, value: _params.get('lifetime'), onChanged: (v) => setState(() => _params = _params.withValue('lifetime', v))),
           ],
         ),
       ],

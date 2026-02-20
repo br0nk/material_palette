@@ -1029,6 +1029,58 @@ final pixelDissolveShaderDef = ShaderDefinition(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// RADIAL PIXEL DISSOLVE SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final radialPixelDissolveShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Radial pixel dissolve has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'centerX': 0.50, 'centerY': 0.50, 'scale': 1.0,
+      'pixelSize': 5.11, 'edgeWidth': 0.35,
+      'scatter': 0.36, 'noiseAmount': 0.93,
+      'speed': 0.21,
+    },
+    colors: {},
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'centerX': const SliderRange('Center X', min: 0.0, max: 1.0),
+    'centerY': const SliderRange('Center Y', min: 0.0, max: 1.0),
+    'scale': const SliderRange('Scale', min: 0.5, max: 3.0),
+    'pixelSize': const SliderRange('Pixel Size', min: 3.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.05, max: 1.0),
+    'scatter': const SliderRange('Scatter', min: 0.0, max: 3.0),
+    'noiseAmount': const SliderRange('Noise', min: 0.0, max: 1.0),
+    'speed': const SliderRange('Speed', min: 0.01, max: 1.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAPPABLE PIXEL DISSOLVE SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final tappablePixelDissolveShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Tappable pixel dissolve has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'pixelSize': 5.11, 'edgeWidth': 0.35,
+      'scatter': 0.36, 'noiseAmount': 0.93,
+      'speed': 0.89, 'radius': 0.20, 'lifetime': 2.0,
+    },
+    colors: {},
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'pixelSize': const SliderRange('Pixel Size', min: 3.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.05, max: 1.0),
+    'scatter': const SliderRange('Scatter', min: 0.0, max: 3.0),
+    'noiseAmount': const SliderRange('Noise', min: 0.0, max: 1.0),
+    'speed': const SliderRange('Speed', min: 0.1, max: 3.0),
+    'radius': const SliderRange('Radius', min: 0.001, max: 3.0),
+    'lifetime': const SliderRange('Lifetime', min: 1.0, max: 8.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // REGISTRY: maps ShaderMaterialType → ShaderDefinition
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1077,4 +1129,6 @@ Map<String, ShaderDefinition> get shaderDefinitionsByName => {
   ShaderNames.radialSmoke: radialSmokeShaderDef,
   ShaderNames.tapSmoke: tappableSmokeShaderDef,
   ShaderNames.pixelDissolve: pixelDissolveShaderDef,
+  ShaderNames.radialPixelDissolve: radialPixelDissolveShaderDef,
+  ShaderNames.tapPixelDissolve: tappablePixelDissolveShaderDef,
 };

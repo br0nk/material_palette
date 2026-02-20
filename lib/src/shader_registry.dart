@@ -28,6 +28,8 @@ abstract class ShaderNames {
   static const String radialSmoke = 'Smoke Radial';
   static const String tapSmoke = 'Smoke Tap';
   static const String pixelDissolve = 'Pixel Dissolve';
+  static const String radialPixelDissolve = 'Pixel Dissolve Radial';
+  static const String tapPixelDissolve = 'Pixel Dissolve Tap';
 }
 
 /// Data for a shader card
@@ -138,5 +140,13 @@ const List<ShaderCardData> allShaders = [
   ShaderCardData(
     title: ShaderNames.pixelDissolve,
     description: 'Pixel disintegration dissolve effect',
+  ),
+  ShaderCardData(
+    title: ShaderNames.radialPixelDissolve,
+    description: 'Radial pixel dissolve from center',
+  ),
+  ShaderCardData(
+    title: ShaderNames.tapPixelDissolve,
+    description: 'Tap to create pixel dissolve effects',
   ),
 ];

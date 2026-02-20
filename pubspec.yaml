@@ -53,3 +53,5 @@ flutter:
     - lib/shaders/voronoi_gradient.frag
     - lib/shaders/voronoise_gradient.frag
     - lib/shaders/pixel_dissolve.frag
+    - lib/shaders/radial_pixel_dissolve.frag
+    - lib/shaders/tappable_pixel_dissolve.frag
