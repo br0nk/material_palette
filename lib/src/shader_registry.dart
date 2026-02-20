@@ -27,6 +27,7 @@ abstract class ShaderNames {
   static const String smoke = 'Smoke';
   static const String radialSmoke = 'Smoke Radial';
   static const String tapSmoke = 'Smoke Tap';
+  static const String pixelDissolve = 'Pixel Dissolve';
 }
 
 /// Data for a shader card
@@ -133,5 +134,9 @@ const List<ShaderCardData> allShaders = [
   ShaderCardData(
     title: ShaderNames.tapSmoke,
     description: 'Tap to create smoke dissolve effects',
+  ),
+  ShaderCardData(
+    title: ShaderNames.pixelDissolve,
+    description: 'Pixel disintegration dissolve effect',
   ),
 ];

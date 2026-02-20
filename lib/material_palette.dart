@@ -34,3 +34,4 @@ export 'package:material_palette/src/shaders/tappable_burn_shader_wrap.dart';
 export 'package:material_palette/src/shaders/smoke_shader_wrap.dart';
 export 'package:material_palette/src/shaders/radial_smoke_shader_wrap.dart';
 export 'package:material_palette/src/shaders/tappable_smoke_shader_wrap.dart';
+export 'package:material_palette/src/shaders/pixel_dissolve_shader_wrap.dart';

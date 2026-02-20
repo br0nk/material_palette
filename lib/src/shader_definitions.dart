@@ -1003,6 +1003,32 @@ final tappableSmokeShaderDef = ShaderDefinition(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// PIXEL DISSOLVE SHADER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+final pixelDissolveShaderDef = ShaderDefinition(
+  layout: const UniformLayout([]),  // Pixel dissolve has fully manual uniform layout
+  defaults: ShaderParams(
+    values: {
+      'dirX': 0.41, 'dirY': 0.10,
+      'pixelSize': 5.11, 'edgeWidth': 0.35,
+      'scatter': 0.36, 'noiseAmount': 0.93,
+      'speed': 0.21,
+    },
+    colors: {},
+  ),
+  uiDefaults: ShaderUIDefaults({
+    'dirX': const SliderRange('Direction X', min: -1.0, max: 1.0),
+    'dirY': const SliderRange('Direction Y', min: -1.0, max: 1.0),
+    'pixelSize': const SliderRange('Pixel Size', min: 3.0, max: 30.0),
+    'edgeWidth': const SliderRange('Edge Width', min: 0.05, max: 1.0),
+    'scatter': const SliderRange('Scatter', min: 0.0, max: 3.0),
+    'noiseAmount': const SliderRange('Noise', min: 0.0, max: 1.0),
+    'speed': const SliderRange('Speed', min: 0.01, max: 1.0),
+  }),
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // REGISTRY: maps ShaderMaterialType → ShaderDefinition
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1050,4 +1076,5 @@ Map<String, ShaderDefinition> get shaderDefinitionsByName => {
   ShaderNames.smoke: smokeShaderDef,
   ShaderNames.radialSmoke: radialSmokeShaderDef,
   ShaderNames.tapSmoke: tappableSmokeShaderDef,
+  ShaderNames.pixelDissolve: pixelDissolveShaderDef,
 };

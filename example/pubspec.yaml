@@ -46,3 +46,4 @@ flutter:
     - packages/material_palette/shaders/radial_voronoi_gradient.frag
     - packages/material_palette/shaders/voronoise_gradient.frag
     - packages/material_palette/shaders/radial_voronoise_gradient.frag
+    - packages/material_palette/shaders/pixel_dissolve.frag
