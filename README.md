@@ -26,6 +26,16 @@ A collection of **material effects** implemented with shaders for Flutter.
 - **Burn Radial** - Radial burn dissolve expanding from a center point (wrap)
 - **Burn Tap** - Tap to create up to 10 simultaneous burn dissolve effects (wrap)
 
+### Smoke Effects
+- **Smoke** - Directional smoke dissolve (wrap)
+- **Smoke Radial** - Radial smoke dissolve expanding from a center point (wrap)
+- **Smoke Tap** - Tap to create up to 10 simultaneous smoke dissolve effects (wrap)
+
+### Pixel Dissolve Effects
+- **Pixel Dissolve** - Directional pixel disintegration dissolve (wrap)
+- **Pixel Dissolve Radial** - Radial pixel dissolve expanding from a center point (wrap)
+- **Pixel Dissolve Tap** - Tap to create up to 10 simultaneous pixel dissolve effects (wrap)
+
 ## Installation
 
 Add to your `pubspec.yaml`:
@@ -66,6 +76,14 @@ flutter:
     - packages/material_palette/shaders/burn.frag
     - packages/material_palette/shaders/radial_burn.frag
     - packages/material_palette/shaders/tappable_burn.frag
+    # Smoke effects
+    - packages/material_palette/shaders/smoke.frag
+    - packages/material_palette/shaders/radial_smoke.frag
+    - packages/material_palette/shaders/tappable_smoke.frag
+    # Pixel dissolve effects
+    - packages/material_palette/shaders/pixel_dissolve.frag
+    - packages/material_palette/shaders/radial_pixel_dissolve.frag
+    - packages/material_palette/shaders/tappable_pixel_dissolve.frag
 ```
 
 ## Quick Start
@@ -154,6 +172,12 @@ GrittyGradientShaderFill(
 | `BurnShaderWrap` | Wrap | Directional burn dissolve |
 | `RadialBurnShaderWrap` | Wrap | Radial burn dissolve from center |
 | `TappableBurnShaderWrap` | Wrap | Tap-triggered burn dissolves |
+| `SmokeShaderWrap` | Wrap | Directional smoke dissolve |
+| `RadialSmokeShaderWrap` | Wrap | Radial smoke dissolve from center |
+| `TappableSmokeShaderWrap` | Wrap | Tap-triggered smoke dissolves |
+| `PixelDissolveShaderWrap` | Wrap | Directional pixel disintegration dissolve |
+| `RadialPixelDissolveShaderWrap` | Wrap | Radial pixel dissolve from center |
+| `TappablePixelDissolveShaderWrap` | Wrap | Tap-triggered pixel dissolves |
 
 ## Running the Demo
 
