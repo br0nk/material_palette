@@ -357,8 +357,25 @@ class ClickRippleShaderCard extends StatefulWidget {
 class _ClickRippleShaderCardState extends State<ClickRippleShaderCard> {
   ShaderParams _params = clickRippleShaderDef.defaults;
   bool _showControls = false;
+  int _curveIndex = 0;
+  double _durationSec = 3.0;
+  double _delaySec = 0.0;
+  bool _reverse = false;
+  bool _invert = false;
+  bool _persistTaps = false;
+  double _rangeStart = 0.0;
+  double _rangeEnd = 1.0;
+  int _tapKey = 0;
 
   ShaderUIDefaults get _ui => clickRippleShaderDef.uiDefaults;
+
+  void _rebuild() => setState(() => _tapKey++);
+
+  ShaderAnimationConfig _buildTapConfig() => _buildAnimConfig(
+    curveIndex: _curveIndex, durationSec: _durationSec, delaySec: _delaySec,
+    loop: false, reverse: _reverse, invert: _invert,
+    rangeStart: _rangeStart, rangeEnd: _rangeEnd,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -372,8 +389,11 @@ class _ClickRippleShaderCardState extends State<ClickRippleShaderCard> {
           width: dimensions.width,
           height: dimensions.height,
           child: ClickableRippleShaderWrap(
+            key: ValueKey('tapRipple_$_tapKey'),
             backgroundColor: backgroundColor,
             params: _params,
+            tapConfig: _buildTapConfig(),
+            persistTaps: _persistTaps,
             child: Image.asset(
               ShaderImageAssets.taplets,
               fit: BoxFit.cover,
@@ -397,8 +417,16 @@ class _ClickRippleShaderCardState extends State<ClickRippleShaderCard> {
             ControlSlider.fromRange(range: _ui['decay']!, value: _params.get('decay'), onChanged: (v) => setState(() => _params = _params.withValue('decay', v))),
             ControlSlider.fromRange(range: _ui['speed']!, value: _params.get('speed'), onChanged: (v) => setState(() => _params = _params.withValue('speed', v))),
             const SizedBox(height: 12),
-            const ControlSectionTitle('Timing'),
-            ControlSlider.fromRange(range: _ui['rippleDuration']!, value: _params.get('rippleDuration'), onChanged: (v) => setState(() => _params = _params.withValue('rippleDuration', v))),
+            const ControlSectionTitle('Tap Animation'),
+            _buildCurveChips(selectedIndex: _curveIndex, onChanged: (i) { _curveIndex = i; _rebuild(); }),
+            const SizedBox(height: 8),
+            ControlSlider(label: 'Duration (s)', value: _durationSec, min: 0.5, max: 8.0, onChanged: (v) { _durationSec = v; _rebuild(); }),
+            ControlSlider(label: 'Delay (s)', value: _delaySec, min: 0.0, max: 2.0, onChanged: (v) { _delaySec = v; _rebuild(); }),
+            SwitchListTile(title: const Text('Reverse', style: TextStyle(fontSize: 12)), value: _reverse, dense: true, contentPadding: EdgeInsets.zero, onChanged: (v) { _reverse = v; _rebuild(); }),
+            SwitchListTile(title: const Text('Invert', style: TextStyle(fontSize: 12)), value: _invert, dense: true, contentPadding: EdgeInsets.zero, onChanged: (v) { _invert = v; _rebuild(); }),
+            SwitchListTile(title: const Text('Persist taps', style: TextStyle(fontSize: 12)), value: _persistTaps, dense: true, contentPadding: EdgeInsets.zero, onChanged: (v) { _persistTaps = v; _rebuild(); }),
+            ControlSlider(label: 'Range Start', value: _rangeStart, min: 0.0, max: 1.0, onChanged: (v) { _rangeStart = v; _rebuild(); }),
+            ControlSlider(label: 'Range End', value: _rangeEnd, min: 0.0, max: 1.0, onChanged: (v) { _rangeEnd = v; _rebuild(); }),
           ],
         ),
       ],

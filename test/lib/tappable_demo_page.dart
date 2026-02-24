@@ -5,7 +5,7 @@ import 'shared_components.dart';
 
 // ============ TAPPABLE SHADER TYPE ============
 
-enum _TappableType { burn, smoke, pixelDissolve }
+enum _TappableType { burn, smoke, pixelDissolve, ripple }
 
 extension _TappableTypeLabel on _TappableType {
   String get label {
@@ -16,6 +16,8 @@ extension _TappableTypeLabel on _TappableType {
         return 'Smoke';
       case _TappableType.pixelDissolve:
         return 'Pixel Dissolve';
+      case _TappableType.ripple:
+        return 'Ripple';
     }
   }
 }
@@ -135,6 +137,8 @@ class _TappableDemoPageState extends State<TappableDemoPage> {
         return tappableSmokeShaderDef;
       case _TappableType.pixelDissolve:
         return tappablePixelDissolveShaderDef;
+      case _TappableType.ripple:
+        return clickRippleShaderDef;
     }
   }
 
@@ -192,6 +196,15 @@ class _TappableDemoPageState extends State<TappableDemoPage> {
           params: _currentParams,
           tapConfig: tapConfig,
           persistTaps: _persistTaps,
+          child: child,
+        );
+      case _TappableType.ripple:
+        return ClickableRippleShaderWrap(
+          key: ValueKey('ripple_$_shaderKey'),
+          params: _currentParams,
+          tapConfig: tapConfig,
+          persistTaps: _persistTaps,
+          backgroundColor: const Color(0xFF202329),
           child: child,
         );
     }
