@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
+import 'package:material_palette/src/shader_animation.dart';
 import 'package:material_palette/src/shader_wrap.dart';
 import 'package:material_palette/src/shader_params.dart';
 import 'package:material_palette/src/shader_definitions.dart';
@@ -15,8 +16,9 @@ class ClickableRippleShaderWrap extends StatefulWidget {
     required this.child,
     this.backgroundColor = Colors.transparent,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
     this.cache = false,
     this.interactive = true,
     this.touchPoints,
@@ -26,7 +28,8 @@ class ClickableRippleShaderWrap extends StatefulWidget {
   final Color backgroundColor;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
   final bool cache;
   final bool interactive;
   final List<ShaderTouchPoint>? touchPoints;
@@ -110,7 +113,8 @@ class _ClickableRippleShaderWrapState
         uniforms.setFloat(widget.backgroundColor.a);
       },
       animationMode: widget.animationMode,
-      animation: widget.animation,
+      time: widget.time,
+      animationConfig: widget.animationConfig,
       cache: widget.cache,
       onPointerDown: (widget.interactive && widget.touchPoints == null)
           ? _onPointerDown

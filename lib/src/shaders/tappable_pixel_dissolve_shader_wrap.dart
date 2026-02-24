@@ -11,15 +11,17 @@ import 'package:material_palette/src/shader_definitions.dart';
 /// back before disappearing. Supports up to 10 simultaneous tap points.
 ///
 /// Per-tap progress (biphasic expand/contract ramp) is computed in Dart.
-/// If the [animation] is a [ShaderAnimation], its [Curve] is applied to
-/// each tap's progress for eased per-tap animation.
+/// If [tapCurve] is provided, it is applied to each tap's progress for
+/// eased per-tap animation.
 class TappablePixelDissolveShaderWrap extends StatefulWidget {
   TappablePixelDissolveShaderWrap({
     super.key,
     required this.child,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
+    this.tapCurve,
     this.cache = false,
     this.interactive = true,
     this.touchPoints,
@@ -28,7 +30,9 @@ class TappablePixelDissolveShaderWrap extends StatefulWidget {
   final Widget child;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
+  final Curve? tapCurve;
   final bool cache;
   final bool interactive;
   final List<ShaderTouchPoint>? touchPoints;
@@ -81,9 +85,7 @@ class _TappablePixelDissolveShaderWrapState
     }
     linear = linear.clamp(0.0, 1.0);
 
-    final curve = (widget.animation is ShaderAnimation)
-        ? (widget.animation as ShaderAnimation).curve
-        : Curves.linear;
+    final curve = widget.tapCurve ?? Curves.linear;
     return curve.transform(linear);
   }
 
@@ -126,7 +128,8 @@ class _TappablePixelDissolveShaderWrapState
         uniforms.setFloat(p.get('radius'));
       },
       animationMode: widget.animationMode,
-      animation: widget.animation,
+      time: widget.time,
+      animationConfig: widget.animationConfig,
       cache: widget.cache,
       onPointerDown: (widget.interactive && widget.touchPoints == null)
           ? _onPointerDown

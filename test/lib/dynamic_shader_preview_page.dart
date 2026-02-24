@@ -20,7 +20,7 @@ class _DynamicShaderPreviewPageState extends State<DynamicShaderPreviewPage> {
   ShaderMaterialType? _selectedType = ShaderMaterialType.grittyGradient;
   double _width = 300;
   double _height = 400;
-  ShaderAnimationMode _animationMode = ShaderAnimationMode.static;
+  ShaderAnimationMode _animationMode = ShaderAnimationMode.implicit;
   late ShaderParams _currentParams;
   late ShaderDefinition _definition;
 
@@ -276,8 +276,8 @@ class _DynamicShaderPreviewPageState extends State<DynamicShaderPreviewPage> {
             label: 'Mode',
             value: _animationMode,
             options: const [
-              (ShaderAnimationMode.static, 'Static'),
-              (ShaderAnimationMode.running, 'Running'),
+              (ShaderAnimationMode.implicit, 'Implicit'),
+              (ShaderAnimationMode.continuous, 'Continuous'),
             ],
             onChanged: (v) => setState(() => _animationMode = v),
           ),

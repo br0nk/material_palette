@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
+import 'package:material_palette/src/shader_animation.dart';
 import 'package:material_palette/src/shader_wrap.dart';
 import 'package:material_palette/src/shader_params.dart';
 import 'package:material_palette/src/shader_definitions.dart';
@@ -9,23 +10,25 @@ import 'package:material_palette/src/shader_definitions.dart';
 /// Burns outward from a configurable center point with an organic FBM-noise
 /// edge and fire glow.
 ///
-/// In `running` mode the [speed] param controls how fast the ping-pong
-/// animation runs. In `animation` mode the shader receives 0-1 progress
-/// directly from the provided [Animation].
+/// In `continuous` mode the [speed] param controls how fast the ping-pong
+/// animation runs. In `explicit` mode the shader receives 0-1 progress
+/// from a [ShaderAnimationConfig].
 class RadialBurnShaderWrap extends StatelessWidget {
   RadialBurnShaderWrap({
     super.key,
     required this.child,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
     this.cache = false,
   }) : params = params ?? radialBurnShaderDef.defaults;
 
   final Widget child;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
   final bool cache;
 
   static Future<void> precacheShader() =>
@@ -36,7 +39,7 @@ class RadialBurnShaderWrap extends StatelessWidget {
     return ShaderWrap(
       shaderPath: 'packages/material_palette/shaders/radial_burn.frag',
       uniformsCallback: (uniforms, size, time) {
-        final progress = animationMode == ShaderAnimationMode.running
+        final progress = animationMode == ShaderAnimationMode.continuous
             ? pingPong(time * params.get('speed'))
             : time;
 
@@ -55,7 +58,8 @@ class RadialBurnShaderWrap extends StatelessWidget {
           ..setFloat(fireColor.b);
       },
       animationMode: animationMode,
-      animation: animation,
+      time: time,
+      animationConfig: animationConfig,
       cache: cache,
       child: child,
     );

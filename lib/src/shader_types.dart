@@ -4,14 +4,16 @@ import 'package:flutter/material.dart';
 
 /// Controls how a shader widget drives its time uniform.
 enum ShaderAnimationMode {
-  /// No animation — time is always 0. Ticker is not created.
-  static,
+  /// The shader is set directly to [time] passed to the widget.
+  /// No internal ticker is created.
+  implicit,
 
-  /// Internal ticker drives time automatically (current default behavior).
-  running,
+  /// The shader animation runs continuously via an internal ticker.
+  /// Interactive shaders (pointer-driven) require this mode.
+  continuous,
 
-  /// External `Animation<double>` drives time. Widget listens to it internally.
-  animation,
+  /// An exact animation behavior runs via a [ShaderAnimationConfig].
+  explicit,
 }
 
 /// A single touch/tap point for interactive shaders.
@@ -72,7 +74,7 @@ class SliderRange {
 /// Converts a monotonically increasing value into a 0→1→0 ping-pong wave.
 ///
 /// Useful for converting raw elapsed time (scaled by speed) into an
-/// oscillating progress value in `running` animation mode.
+/// oscillating progress value in `continuous` animation mode.
 double pingPong(double t) {
   final mod = t % 2.0;
   return mod <= 1.0 ? mod : 2.0 - mod;

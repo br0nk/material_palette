@@ -5,6 +5,7 @@ import 'package:flutter_shaders/flutter_shaders.dart';
 import 'package:material_palette/src/shader_fill.dart';
 import 'package:material_palette/src/shader_params.dart';
 import 'package:material_palette/src/shader_definitions.dart';
+import 'package:material_palette/src/shader_animation.dart';
 
 /// A shader wrapper that renders a radial Perlin noise gradient effect.
 class RadialPerlinGradientShaderFill extends StatelessWidget {
@@ -13,8 +14,9 @@ class RadialPerlinGradientShaderFill extends StatelessWidget {
     required this.width,
     required this.height,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
     this.cache = false,
   }) : params = params ?? radialPerlinGradientDef.defaults;
 
@@ -22,7 +24,8 @@ class RadialPerlinGradientShaderFill extends StatelessWidget {
   final double height;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
   final bool cache;
 
   static Future<void> precacheShader() =>
@@ -40,7 +43,8 @@ class RadialPerlinGradientShaderFill extends StatelessWidget {
       shaderPath: 'packages/material_palette/shaders/radial_perlin_gradient.frag',
       uniformsCallback: _setUniforms,
       animationMode: animationMode,
-      animation: animation,
+      time: time,
+      animationConfig: animationConfig,
       cache: cache,
     );
   }

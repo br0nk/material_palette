@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
+import 'package:material_palette/src/shader_animation.dart';
 import 'package:material_palette/src/shader_fill.dart';
 import 'package:material_palette/src/shader_params.dart';
 import 'package:material_palette/src/shader_definitions.dart';
@@ -14,8 +15,9 @@ class MarbleSmearShaderFill extends StatefulWidget {
     required this.height,
     this.backgroundColor = Colors.transparent,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
     this.cache = false,
     this.interactive = true,
     this.smudges,
@@ -27,7 +29,8 @@ class MarbleSmearShaderFill extends StatefulWidget {
   final Color? backgroundColor;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
   final bool cache;
   final bool interactive;
   final List<ShaderSmudgeData>? smudges;
@@ -152,7 +155,8 @@ class _MarbleSmearShaderFillState extends State<MarbleSmearShaderFill> {
       backgroundColor: widget.backgroundColor,
       uniformsCallback: _setUniforms,
       animationMode: widget.animationMode,
-      animation: widget.animation,
+      time: widget.time,
+      animationConfig: widget.animationConfig,
       cache: widget.cache,
     );
 

@@ -28,9 +28,10 @@ class ShaderFill extends StatefulWidget {
     required this.uniformsCallback,
     this.backgroundColor = Colors.transparent,
     this.onPointerDown,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
-    this.cache = false,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
+    this.cache = true,
   });
 
   final double width;
@@ -42,14 +43,30 @@ class ShaderFill extends StatefulWidget {
   /// Optional pointer down callback for interactive shaders.
   final void Function(PointerDownEvent event)? onPointerDown;
 
-  /// Controls how time is driven. Defaults to [ShaderAnimationMode.running].
+  /// Controls how time is driven. Defaults to [ShaderAnimationMode.continuous].
   final ShaderAnimationMode animationMode;
 
-  /// External animation that drives time when
-  /// [animationMode] == [ShaderAnimationMode.animation].
-  final Animation<double>? animation;
+  /// External time value used when [animationMode] == [ShaderAnimationMode.implicit].
+  final double time;
 
-  /// When true, wraps the shader output in a [RepaintBoundary].
+  /// Animation configuration used when
+  /// [animationMode] == [ShaderAnimationMode.explicit].
+  final ShaderAnimationConfig? animationConfig;
+
+  /// Wraps the shader subtree in a [RepaintBoundary] to isolate repaints in
+  /// both directions.
+  ///
+  /// Unlike [ShaderWrap], the underlying [CustomPainter] has no inner repaint
+  /// boundary. Without this flag, every frame's repaint propagates up to the
+  /// nearest ancestor boundary — potentially repainting a much larger area.
+  /// With it, shader repaints stay contained *and* ancestor repaints skip the
+  /// shader subtree entirely.
+  ///
+  /// Defaults to `true` because the default [animationMode] is [continuous],
+  /// and without the boundary every frame's repaint propagates up to the
+  /// nearest ancestor boundary. Set to `false` only for [implicit] shaders in a
+  /// stable parent tree, or when you intentionally want to merge compositing
+  /// layers.
   final bool cache;
 
   @override
@@ -57,83 +74,116 @@ class ShaderFill extends StatefulWidget {
 }
 
 class _ShaderFillState extends State<ShaderFill>
-    with TickerProviderStateMixin {
-  Ticker? _ticker;
+    with SingleTickerProviderStateMixin {
+  late final Ticker _ticker;
   final ValueNotifier<double> _time = ValueNotifier<double>(0.0);
 
   @override
   void initState() {
     super.initState();
-    _setupTimeSource();
+    _ticker = createTicker(_onTick);
+    _startTimeSource();
   }
 
-  void _setupTimeSource() {
+  // -- Ticker callback -------------------------------------------------------
+
+  void _onTick(Duration elapsed) {
     switch (widget.animationMode) {
-      case ShaderAnimationMode.running:
-        _ticker = createTicker((elapsed) {
-          _time.value = elapsed.inMilliseconds / 1000.0;
-        });
-        _ticker!.start();
+      case ShaderAnimationMode.continuous:
+        _time.value = elapsed.inMilliseconds / 1000.0;
         break;
-      case ShaderAnimationMode.animation:
-        final anim = widget.animation!;
-        if (anim is ShaderAnimation) {
-          anim.attach(this);
-        }
-        anim.addListener(_onAnimationTick);
+      case ShaderAnimationMode.explicit:
+        _time.value =
+            _computeProgress(elapsed, widget.animationConfig!);
         break;
-      case ShaderAnimationMode.static:
+      case ShaderAnimationMode.implicit:
         break;
     }
   }
 
-  void _onAnimationTick() {
-    _time.value = widget.animation!.value;
+  /// Converts raw elapsed time into 0-1 progress using [ShaderAnimationConfig].
+  double _computeProgress(Duration elapsed, ShaderAnimationConfig config) {
+    final delayUs = config.delay.inMicroseconds.toDouble();
+    final durationUs = config.duration.inMicroseconds.toDouble();
+    final elapsedUs = elapsed.inMicroseconds.toDouble();
+
+    if (elapsedUs < delayUs) return 0.0;
+    if (durationUs <= 0) return 1.0;
+
+    final activeUs = elapsedUs - delayUs;
+
+    double linear;
+    if (config.loop) {
+      if (config.reverse) {
+        // Ping-pong: 0→1→0→1→0…
+        final cycleUs = durationUs * 2;
+        final pos = activeUs % cycleUs;
+        linear = pos <= durationUs
+            ? pos / durationUs
+            : 2.0 - pos / durationUs;
+      } else {
+        // Sawtooth: 0→1, 0→1, 0→1…
+        linear = (activeUs % durationUs) / durationUs;
+      }
+    } else {
+      linear = (activeUs / durationUs).clamp(0.0, 1.0);
+    }
+
+    return config.curve.transform(linear.clamp(0.0, 1.0));
   }
+
+  // -- Time source management ------------------------------------------------
+
+  void _startTimeSource() {
+    switch (widget.animationMode) {
+      case ShaderAnimationMode.implicit:
+        _time.value = widget.time;
+        break;
+      case ShaderAnimationMode.continuous:
+        _ticker.start();
+        break;
+      case ShaderAnimationMode.explicit:
+        _ticker.start();
+        break;
+    }
+  }
+
+  void _stopTimeSource() {
+    switch (widget.animationMode) {
+      case ShaderAnimationMode.continuous:
+      case ShaderAnimationMode.explicit:
+        _ticker.stop();
+        _time.value = 0.0;
+        break;
+      case ShaderAnimationMode.implicit:
+        break;
+    }
+  }
+
+  // -- Lifecycle -------------------------------------------------------------
 
   @override
   void didUpdateWidget(ShaderFill oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.animationMode != widget.animationMode ||
-        oldWidget.animation != widget.animation) {
-      // Tear down old source
-      switch (oldWidget.animationMode) {
-        case ShaderAnimationMode.running:
-          _ticker?.stop();
-          _ticker?.dispose();
-          _ticker = null;
-          _time.value = 0.0;
-          break;
-        case ShaderAnimationMode.animation:
-          final oldAnim = oldWidget.animation;
-          oldAnim?.removeListener(_onAnimationTick);
-          if (oldAnim is ShaderAnimation) {
-            oldAnim.detach();
-          }
-          break;
-        case ShaderAnimationMode.static:
-          break;
-      }
-
-      // Set up new source
-      _setupTimeSource();
+        oldWidget.animationConfig != widget.animationConfig) {
+      _stopTimeSource();
+      _startTimeSource();
+    } else if (widget.animationMode == ShaderAnimationMode.implicit &&
+        oldWidget.time != widget.time) {
+      _time.value = widget.time;
     }
   }
 
   @override
   void dispose() {
-    _ticker?.dispose();
-    if (widget.animationMode == ShaderAnimationMode.animation) {
-      final anim = widget.animation;
-      anim?.removeListener(_onAnimationTick);
-      if (anim is ShaderAnimation) {
-        anim.detach();
-      }
-    }
+    _ticker.dispose();
     _time.dispose();
     super.dispose();
   }
+
+  // -- Build -----------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {

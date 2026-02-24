@@ -11,15 +11,17 @@ import 'package:material_palette/src/shader_definitions.dart';
 /// before disappearing. Supports up to 10 simultaneous tap points.
 ///
 /// Per-tap progress (biphasic expand/contract ramp) is computed in Dart.
-/// If the [animation] is a [ShaderAnimation], its [Curve] is applied to
-/// each tap's progress for eased per-tap animation.
+/// If [tapCurve] is provided, it is applied to each tap's progress for
+/// eased per-tap animation.
 class TappableBurnShaderWrap extends StatefulWidget {
   TappableBurnShaderWrap({
     super.key,
     required this.child,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
+    this.tapCurve,
     this.cache = false,
     this.interactive = true,
     this.touchPoints,
@@ -28,7 +30,9 @@ class TappableBurnShaderWrap extends StatefulWidget {
   final Widget child;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
+  final Curve? tapCurve;
   final bool cache;
   final bool interactive;
   final List<ShaderTouchPoint>? touchPoints;
@@ -81,10 +85,7 @@ class _TappableBurnShaderWrapState
     }
     linear = linear.clamp(0.0, 1.0);
 
-    // Apply curve from ShaderAnimation if available
-    final curve = (widget.animation is ShaderAnimation)
-        ? (widget.animation as ShaderAnimation).curve
-        : Curves.linear;
+    final curve = widget.tapCurve ?? Curves.linear;
     return curve.transform(linear);
   }
 
@@ -130,7 +131,8 @@ class _TappableBurnShaderWrapState
         uniforms.setFloat(p.get('burnRadius'));
       },
       animationMode: widget.animationMode,
-      animation: widget.animation,
+      time: widget.time,
+      animationConfig: widget.animationConfig,
       cache: widget.cache,
       onPointerDown: (widget.interactive && widget.touchPoints == null)
           ? _onPointerDown

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
+import 'package:material_palette/src/shader_animation.dart';
 import 'package:material_palette/src/shader_wrap.dart';
 import 'package:material_palette/src/shader_params.dart';
 import 'package:material_palette/src/shader_definitions.dart';
@@ -11,8 +12,9 @@ class RippleShaderWrap extends StatelessWidget {
     required this.child,
     this.backgroundColor = Colors.transparent,
     ShaderParams? params,
-    this.animationMode = ShaderAnimationMode.running,
-    this.animation,
+    this.animationMode = ShaderAnimationMode.continuous,
+    this.time = 0,
+    this.animationConfig,
     this.cache = false,
   }) : params = params ?? rippleShaderDef.defaults;
 
@@ -20,7 +22,8 @@ class RippleShaderWrap extends StatelessWidget {
   final Color backgroundColor;
   final ShaderParams params;
   final ShaderAnimationMode animationMode;
-  final Animation<double>? animation;
+  final double time;
+  final ShaderAnimationConfig? animationConfig;
   final bool cache;
 
   static Future<void> precacheShader() =>
@@ -62,7 +65,8 @@ class RippleShaderWrap extends StatelessWidget {
           ..setFloat(params.get('speed'));
       },
       animationMode: animationMode,
-      animation: animation,
+      time: time,
+      animationConfig: animationConfig,
       cache: cache,
       child: child,
     );

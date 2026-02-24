@@ -7,35 +7,20 @@ import 'shared_components.dart';
 
 class _CurveEntry {
   final String name;
-  final ShaderAnimation Function({
-    required Duration duration,
-    required Duration delay,
-    required bool loop,
-    required bool reverse,
-  }) factory;
+  final Curve curve;
 
-  const _CurveEntry(this.name, this.factory);
+  const _CurveEntry(this.name, this.curve);
 }
 
 final _curveEntries = <_CurveEntry>[
-  _CurveEntry('linear', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.linear(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('easeIn', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.easeIn(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('easeInOut', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.easeInOut(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('easeOut', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.easeOut(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('bounce', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.bounce(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('elastic', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.elastic(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('elasticOut', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.elasticOut(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('elasticIn', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.elasticIn(duration: duration, delay: delay, loop: loop, reverse: reverse)),
-  _CurveEntry('easeInOutQuint', ({required duration, required delay, required loop, required reverse}) =>
-      ShaderAnimation.easeInOutQuint(duration: duration, delay: delay, loop: loop, reverse: reverse)),
+  const _CurveEntry('linear', Curves.linear),
+  const _CurveEntry('easeIn', Curves.easeIn),
+  const _CurveEntry('easeInOut', Curves.easeInOut),
+  const _CurveEntry('easeOut', Curves.easeOut),
+  const _CurveEntry('bounce', Curves.bounceOut),
+  const _CurveEntry('elastic', Curves.elasticInOut),
+  const _CurveEntry('elasticOut', Curves.elasticOut),
+  const _CurveEntry('elasticIn', Curves.elasticIn),
 ];
 
 // ============ SHADER TYPE REGISTRY ============
@@ -109,7 +94,7 @@ Widget _buildDemoContent(double width, double height) {
 
 Widget _buildShaderWidget({
   required _ShaderType shaderType,
-  required ShaderAnimation animation,
+  required ShaderAnimationConfig animationConfig,
   required double width,
   required double height,
 }) {
@@ -117,38 +102,38 @@ Widget _buildShaderWidget({
   switch (shaderType) {
     case _ShaderType.burn:
       return BurnShaderWrap(
-        animationMode: ShaderAnimationMode.animation,
-        animation: animation,
+        animationMode: ShaderAnimationMode.explicit,
+        animationConfig: animationConfig,
         child: child,
       );
     case _ShaderType.smoke:
       return SmokeShaderWrap(
-        animationMode: ShaderAnimationMode.animation,
-        animation: animation,
+        animationMode: ShaderAnimationMode.explicit,
+        animationConfig: animationConfig,
         child: child,
       );
     case _ShaderType.pixelDissolve:
       return PixelDissolveShaderWrap(
-        animationMode: ShaderAnimationMode.animation,
-        animation: animation,
+        animationMode: ShaderAnimationMode.explicit,
+        animationConfig: animationConfig,
         child: child,
       );
     case _ShaderType.radialBurn:
       return RadialBurnShaderWrap(
-        animationMode: ShaderAnimationMode.animation,
-        animation: animation,
+        animationMode: ShaderAnimationMode.explicit,
+        animationConfig: animationConfig,
         child: child,
       );
     case _ShaderType.radialSmoke:
       return RadialSmokeShaderWrap(
-        animationMode: ShaderAnimationMode.animation,
-        animation: animation,
+        animationMode: ShaderAnimationMode.explicit,
+        animationConfig: animationConfig,
         child: child,
       );
     case _ShaderType.radialPixelDissolve:
       return RadialPixelDissolveShaderWrap(
-        animationMode: ShaderAnimationMode.animation,
-        animation: animation,
+        animationMode: ShaderAnimationMode.explicit,
+        animationConfig: animationConfig,
         child: child,
       );
   }
@@ -174,8 +159,9 @@ class _AnimationDemoPageState extends State<AnimationDemoPage> {
   // Track a key to force rebuild when animation params change
   int _animKey = 0;
 
-  ShaderAnimation _buildAnimation() {
-    return _curveEntries[_curveIndex].factory(
+  ShaderAnimationConfig _buildAnimationConfig() {
+    return ShaderAnimationConfig(
+      curve: _curveEntries[_curveIndex].curve,
       duration: Duration(milliseconds: (_durationSec * 1000).round()),
       delay: Duration(milliseconds: (_delaySec * 1000).round()),
       loop: _loop,
@@ -212,7 +198,7 @@ class _AnimationDemoPageState extends State<AnimationDemoPage> {
                   key: ValueKey(_animKey),
                   child: _buildShaderWidget(
                     shaderType: _shaderType,
-                    animation: _buildAnimation(),
+                    animationConfig: _buildAnimationConfig(),
                     width: dimensions.width,
                     height: dimensions.height,
                   ),
@@ -370,7 +356,8 @@ class _CurveComparisonGrid extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: _curveEntries.map((entry) {
-        final animation = entry.factory(
+        final animationConfig = ShaderAnimationConfig(
+          curve: entry.curve,
           duration: duration,
           delay: Duration.zero,
           loop: true,
@@ -389,7 +376,7 @@ class _CurveComparisonGrid extends StatelessWidget {
                   key: ValueKey('${entry.name}_$animKey'),
                   child: _buildShaderWidget(
                     shaderType: shaderType,
-                    animation: animation,
+                    animationConfig: animationConfig,
                     width: thumbWidth,
                     height: thumbHeight,
                   ),
