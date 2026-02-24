@@ -53,7 +53,7 @@ void main() {
 
     // Margin so each tap's dissolve starts and ends fully invisible
     float scatterMargin = uScatter * max(cellSizeUV.x, cellSizeUV.y) * 5.0;
-    float margin = scatterMargin + uEdgeWidth;
+    float margin = scatterMargin * 0.6 + uEdgeWidth * 0.5;
     float offset = margin + uEdgeWidth;
     float sweepRange = 1.0 + 2.0 * uEdgeWidth + 2.0 * margin;
 

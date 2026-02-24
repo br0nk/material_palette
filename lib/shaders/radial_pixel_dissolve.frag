@@ -54,7 +54,7 @@ void main() {
 
     // Compute max radial distance so dissolve starts and ends fully off-screen
     float scatterMargin = uScatter * max(cellSizeUV.x, cellSizeUV.y) * 5.0;
-    float margin = scatterMargin + uEdgeWidth;
+    float margin = scatterMargin * 0.6 + uEdgeWidth * 0.5;
 
     float maxDeltaX = max(uCenterX, 1.0 - uCenterX) * aspect;
     float maxDeltaY = max(uCenterY, 1.0 - uCenterY);

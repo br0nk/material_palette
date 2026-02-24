@@ -102,14 +102,20 @@ class _ShaderFillState extends State<ShaderFill>
     }
   }
 
-  /// Converts raw elapsed time into 0-1 progress using [ShaderAnimationConfig].
+  /// Converts raw elapsed time into progress using [ShaderAnimationConfig].
+  ///
+  /// The output respects [ShaderAnimationConfig.rangeStart],
+  /// [ShaderAnimationConfig.rangeEnd], and [ShaderAnimationConfig.invert].
   double _computeProgress(Duration elapsed, ShaderAnimationConfig config) {
+    final start = config.invert ? config.rangeEnd : config.rangeStart;
+    final end = config.invert ? config.rangeStart : config.rangeEnd;
+
     final delayUs = config.delay.inMicroseconds.toDouble();
     final durationUs = config.duration.inMicroseconds.toDouble();
     final elapsedUs = elapsed.inMicroseconds.toDouble();
 
-    if (elapsedUs < delayUs) return 0.0;
-    if (durationUs <= 0) return 1.0;
+    if (elapsedUs < delayUs) return start;
+    if (durationUs <= 0) return end;
 
     final activeUs = elapsedUs - delayUs;
 
@@ -130,7 +136,8 @@ class _ShaderFillState extends State<ShaderFill>
       linear = (activeUs / durationUs).clamp(0.0, 1.0);
     }
 
-    return config.curve.transform(linear.clamp(0.0, 1.0));
+    final curved = config.curve.transform(linear.clamp(0.0, 1.0));
+    return start + curved * (end - start);
   }
 
   // -- Time source management ------------------------------------------------

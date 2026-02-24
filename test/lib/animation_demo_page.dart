@@ -155,6 +155,9 @@ class _AnimationDemoPageState extends State<AnimationDemoPage> {
   double _delaySec = 0.0;
   bool _loop = true;
   bool _reverse = true;
+  bool _invert = false;
+  double _rangeStart = 0.0;
+  double _rangeEnd = 1.0;
 
   // Track a key to force rebuild when animation params change
   int _animKey = 0;
@@ -166,6 +169,9 @@ class _AnimationDemoPageState extends State<AnimationDemoPage> {
       delay: Duration(milliseconds: (_delaySec * 1000).round()),
       loop: _loop,
       reverse: _reverse,
+      invert: _invert,
+      rangeStart: _rangeStart,
+      rangeEnd: _rangeEnd,
     );
   }
 
@@ -302,6 +308,39 @@ class _AnimationDemoPageState extends State<AnimationDemoPage> {
                       contentPadding: EdgeInsets.zero,
                       onChanged: (v) {
                         _reverse = v;
+                        _rebuild();
+                      },
+                    ),
+                    SwitchListTile(
+                      title: const Text('Invert', style: TextStyle(fontSize: 13)),
+                      value: _invert,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (v) {
+                        _invert = v;
+                        _rebuild();
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+                    const ControlSectionTitle('Range'),
+                    ControlSlider(
+                      label: 'Start',
+                      value: _rangeStart,
+                      min: 0.0,
+                      max: 1.0,
+                      onChanged: (v) {
+                        _rangeStart = v;
+                        _rebuild();
+                      },
+                    ),
+                    ControlSlider(
+                      label: 'End',
+                      value: _rangeEnd,
+                      min: 0.0,
+                      max: 1.0,
+                      onChanged: (v) {
+                        _rangeEnd = v;
                         _rebuild();
                       },
                     ),

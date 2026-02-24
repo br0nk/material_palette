@@ -4,6 +4,7 @@ import 'animation_demo_page.dart';
 import 'dynamic_shader_preview_page.dart';
 import 'shared_components.dart';
 import 'shader_wrap_demo_page.dart';
+import 'tappable_demo_page.dart';
 
 void main() {
   runApp(const TestDemosApp());
@@ -67,6 +68,7 @@ class _TestDemosHomeState extends State<TestDemosHome> {
     ShaderWrapDemoPage(),
     DynamicShaderPreviewPage(),
     AnimationDemoPage(),
+    TappableDemoPage(),
   ];
 
   @override
@@ -94,6 +96,10 @@ class _TestDemosHomeState extends State<TestDemosHome> {
               NavigationRailDestination(
                 icon: Icon(Icons.animation),
                 label: Text('Animations'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.touch_app),
+                label: Text('Tappable'),
               ),
             ],
           ),

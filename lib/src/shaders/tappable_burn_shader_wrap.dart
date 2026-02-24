@@ -10,9 +10,11 @@ import 'package:material_palette/src/shader_definitions.dart';
 /// Each tap creates a radial burn that expands outward then contracts back
 /// before disappearing. Supports up to 10 simultaneous tap points.
 ///
-/// Per-tap progress (biphasic expand/contract ramp) is computed in Dart.
-/// If [tapCurve] is provided, it is applied to each tap's progress for
-/// eased per-tap animation.
+/// Per-tap animation is controlled by [tapConfig]. When provided, [duration]
+/// sets the one-way time (total cycle = 2× duration when [reverse] is true),
+/// [curve] shapes the progress, [invert] and [rangeStart]/[rangeEnd] remap
+/// the output. When null, timing comes from the `speed` and `burnLifetime`
+/// shader params with a linear biphasic ramp.
 class TappableBurnShaderWrap extends StatefulWidget {
   TappableBurnShaderWrap({
     super.key,
@@ -21,7 +23,7 @@ class TappableBurnShaderWrap extends StatefulWidget {
     this.animationMode = ShaderAnimationMode.continuous,
     this.time = 0,
     this.animationConfig,
-    this.tapCurve,
+    this.tapConfig,
     this.cache = false,
     this.interactive = true,
     this.touchPoints,
@@ -32,7 +34,11 @@ class TappableBurnShaderWrap extends StatefulWidget {
   final ShaderAnimationMode animationMode;
   final double time;
   final ShaderAnimationConfig? animationConfig;
-  final Curve? tapCurve;
+
+  /// Per-tap animation configuration. Controls curve, duration, delay,
+  /// reverse, invert, and range for each tap's progress. The [loop] field
+  /// is ignored — each tap is a one-shot effect.
+  final ShaderAnimationConfig? tapConfig;
   final bool cache;
   final bool interactive;
   final List<ShaderTouchPoint>? touchPoints;
@@ -65,28 +71,80 @@ class _TappableBurnShaderWrapState
   }
 
   void _removeExpiredClicks() {
-    final speed = widget.params.get('speed');
-    final lifetime = widget.params.get('burnLifetime');
-    _clicks.removeWhere((click) =>
-        click.elapsed > lifetime / speed);
+    final config = widget.tapConfig;
+    final double lifetimeSec;
+    if (config != null) {
+      final delaySec = config.delay.inMicroseconds / 1e6;
+      final durationSec = config.duration.inMicroseconds / 1e6;
+      lifetimeSec = delaySec + (config.reverse ? durationSec * 2 : durationSec);
+    } else {
+      final speed = widget.params.get('speed');
+      final lifetime = widget.params.get('burnLifetime');
+      lifetimeSec = lifetime / speed;
+    }
+    _clicks.removeWhere((click) => click.elapsed > lifetimeSec);
   }
 
-  /// Computes 0-1 biphasic progress for a single tap.
+  /// Computes per-tap progress using [tapConfig] when available,
+  /// otherwise falls back to the legacy biphasic ramp from shader params.
   double _tapProgress(ShaderTouchPoint click) {
-    final speed = widget.params.get('speed');
-    final lifetime = widget.params.get('burnLifetime');
-    final rawTime = click.elapsed * speed;
-    final halfLife = lifetime * 0.5;
-    double linear;
-    if (rawTime < halfLife) {
-      linear = rawTime / halfLife;
-    } else {
-      linear = 1.0 - (rawTime - halfLife) / halfLife;
-    }
-    linear = linear.clamp(0.0, 1.0);
+    final config = widget.tapConfig;
 
-    final curve = widget.tapCurve ?? Curves.linear;
-    return curve.transform(linear);
+    final double elapsedSec = click.elapsed;
+    final double delaySec;
+    final double durationSec;
+    final Curve curve;
+    final bool reverse;
+    final bool invert;
+    final double rangeStart;
+    final double rangeEnd;
+
+    if (config != null) {
+      delaySec = config.delay.inMicroseconds / 1e6;
+      durationSec = config.duration.inMicroseconds / 1e6;
+      curve = config.curve;
+      reverse = config.reverse;
+      invert = config.invert;
+      rangeStart = config.rangeStart;
+      rangeEnd = config.rangeEnd;
+    } else {
+      final speed = widget.params.get('speed');
+      final lifetime = widget.params.get('burnLifetime');
+      delaySec = 0.0;
+      durationSec = lifetime / speed * 0.5;
+      curve = Curves.linear;
+      reverse = true;
+      invert = false;
+      rangeStart = 0.0;
+      rangeEnd = 1.0;
+    }
+
+    final activeSec = elapsedSec - delaySec;
+    if (activeSec < 0) {
+      return invert ? rangeEnd : rangeStart;
+    }
+    if (durationSec <= 0) {
+      return invert ? rangeStart : rangeEnd;
+    }
+
+    double linear;
+    if (reverse) {
+      final totalSec = durationSec * 2;
+      if (activeSec >= totalSec) {
+        linear = 0.0;
+      } else if (activeSec <= durationSec) {
+        linear = activeSec / durationSec;
+      } else {
+        linear = 2.0 - activeSec / durationSec;
+      }
+    } else {
+      linear = (activeSec / durationSec).clamp(0.0, 1.0);
+    }
+
+    final curved = curve.transform(linear.clamp(0.0, 1.0));
+    final start = invert ? rangeEnd : rangeStart;
+    final end = invert ? rangeStart : rangeEnd;
+    return start + curved * (end - start);
   }
 
   @override

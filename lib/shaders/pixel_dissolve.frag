@@ -59,7 +59,7 @@ void main() {
     // Compute gradient range for this direction so the dissolve starts and ends
     // fully off-screen (no residual pixels visible at progress 0 or 1).
     float scatterMargin = uScatter * max(cellSizeUV.x, cellSizeUV.y) * 5.0;
-    float margin = scatterMargin + uEdgeWidth;
+    float margin = scatterMargin * 0.6 + uEdgeWidth * 0.5;
 
     float minBase = min(dir.x, 0.0) + min(dir.y, 0.0);
     float maxBase = max(dir.x, 0.0) + max(dir.y, 0.0);

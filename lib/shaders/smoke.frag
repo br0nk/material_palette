@@ -87,8 +87,8 @@ void main() {
 
     // Compute gradient range for this direction so the burn starts and ends
     // fully off-screen (no residual glow/edge visible at progress 0 or 1).
-    float edgeThickness = 0.06;
-    float glowWidth = 0.12;
+    float edgeThickness = 0.03;
+    float glowWidth = 0.06;
     float margin = edgeThickness + glowWidth;
 
     float minBase = min(dir.x, 0.0) + min(dir.y, 0.0);

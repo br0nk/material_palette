@@ -23,6 +23,9 @@ class ShaderAnimationConfig {
     this.curve = Curves.linear,
     this.loop = false,
     this.reverse = false,
+    this.invert = false,
+    this.rangeStart = 0.0,
+    this.rangeEnd = 1.0,
   });
 
   final Duration duration;
@@ -30,6 +33,21 @@ class ShaderAnimationConfig {
   final Curve curve;
   final bool loop;
   final bool reverse;
+
+  /// When true, the animation runs in reverse direction within the range.
+  ///
+  /// With the default range [0, 1], the animation goes from 1→0
+  /// instead of 0→1. Combined with a custom range like [0.2, 0.8],
+  /// the animation goes from 0.8→0.2 instead of 0.2→0.8.
+  final bool invert;
+
+  /// The start of the output range. Progress 0.0 maps to this value.
+  /// Defaults to 0.0. Must be in [0, 1].
+  final double rangeStart;
+
+  /// The end of the output range. Progress 1.0 maps to this value.
+  /// Defaults to 1.0. Must be in [0, 1].
+  final double rangeEnd;
 
   @override
   bool operator ==(Object other) =>
@@ -40,10 +58,14 @@ class ShaderAnimationConfig {
           delay == other.delay &&
           curve == other.curve &&
           loop == other.loop &&
-          reverse == other.reverse;
+          reverse == other.reverse &&
+          invert == other.invert &&
+          rangeStart == other.rangeStart &&
+          rangeEnd == other.rangeEnd;
 
   @override
-  int get hashCode => Object.hash(duration, delay, curve, loop, reverse);
+  int get hashCode => Object.hash(
+      duration, delay, curve, loop, reverse, invert, rangeStart, rangeEnd);
 
   ShaderAnimationConfig copyWith({
     Duration? duration,
@@ -51,6 +73,9 @@ class ShaderAnimationConfig {
     Curve? curve,
     bool? loop,
     bool? reverse,
+    bool? invert,
+    double? rangeStart,
+    double? rangeEnd,
   }) =>
       ShaderAnimationConfig(
         duration: duration ?? this.duration,
@@ -58,5 +83,8 @@ class ShaderAnimationConfig {
         curve: curve ?? this.curve,
         loop: loop ?? this.loop,
         reverse: reverse ?? this.reverse,
+        invert: invert ?? this.invert,
+        rangeStart: rangeStart ?? this.rangeStart,
+        rangeEnd: rangeEnd ?? this.rangeEnd,
       );
 }

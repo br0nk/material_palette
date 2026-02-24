@@ -90,8 +90,8 @@ void main() {
 
     // Compute max radial distance so the burn starts and ends fully
     // off-screen (no residual glow/edge visible at progress 0 or 1).
-    float edgeThickness = 0.06;
-    float glowWidth = 0.12;
+    float edgeThickness = 0.03;
+    float glowWidth = 0.06;
     float margin = edgeThickness + glowWidth;
 
     float maxDeltaX = max(uBurnCenterX, 1.0 - uBurnCenterX) * aspect;
