@@ -1,3 +1,8 @@
+## 0.7.0
+
+- Support for implicit animations of shader params.
+- Update marble smear shader color handling.
+
 ## 0.6.0
 
 - Add smoke and pixel dissolve shaders (with radial and tappable variants).

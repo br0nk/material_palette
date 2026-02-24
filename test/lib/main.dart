@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'animation_demo_page.dart';
 import 'dynamic_shader_preview_page.dart';
+import 'implicit_animation_demo_page.dart';
 import 'shared_components.dart';
 import 'shader_wrap_demo_page.dart';
 import 'tappable_demo_page.dart';
@@ -69,6 +70,7 @@ class _TestDemosHomeState extends State<TestDemosHome> {
     DynamicShaderPreviewPage(),
     AnimationDemoPage(),
     TappableDemoPage(),
+    ImplicitAnimationDemoPage(),
   ];
 
   @override
@@ -100,6 +102,10 @@ class _TestDemosHomeState extends State<TestDemosHome> {
               NavigationRailDestination(
                 icon: Icon(Icons.touch_app),
                 label: Text('Tappable'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.auto_awesome),
+                label: Text('Implicit Anim'),
               ),
             ],
           ),
