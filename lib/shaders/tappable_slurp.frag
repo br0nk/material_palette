@@ -9,8 +9,8 @@ uniform vec2 uTouchPoints[10];
 uniform float uTimes[10];
 
 // Slurp params
-uniform float uRadius;        // influence radius of slurp
-uniform float uGravity;       // drape exponent (higher = steeper tent)
+uniform float uGravity;       // delay spread (higher = edges wait longer)
+uniform float uEasing;        // onset curve (1 = linear, higher = more gradual)
 uniform float uWrinkles;      // number of radial fold lines
 uniform float uWrinkleDepth;  // how pronounced folds are
 uniform float uFoldShading;   // brightness variation from folds
@@ -53,11 +53,16 @@ void main() {
         deltaCorr.x *= aspect;
         float dist = length(deltaCorr);
 
-        // Pull factor: smooth exponential falloff — always non-zero,
-        // so even distant edges get pulled in.
-        // radius controls width, gravity controls steepness.
-        float k = progress * exp(-pow(dist / max(uRadius, 0.001), uGravity));
-        k = clamp(k, 0.0, 1.0);
+        // Distance-delayed pull: near-tap pixels start immediately,
+        // far pixels wait. Gravity controls how much later edges start.
+        float maxDist = length(vec2(aspect * 0.5, 0.5));
+        float normDist = dist / max(maxDist, 0.001);
+        float threshold = normDist * uGravity;
+        float localProgress = clamp(
+            max(progress - threshold, 0.0) / max(1.0 - threshold, 0.001),
+            0.0, 1.0);
+        // Ease-in power curve: gradual onset of influence
+        float k = pow(localProgress, uEasing);
 
         // Inverse mapping: find where this pixel's content came from
         // Forward: dst = tap + (src - tap) * (1 - k)
@@ -76,7 +81,7 @@ void main() {
             tangentDir.x /= aspect;
 
             float wrinkleStrength = wrinklePhase * uWrinkleDepth * k;
-            sampleUV += tangentDir * wrinkleStrength * uRadius * 0.05;
+            sampleUV += tangentDir * wrinkleStrength * 0.1;
 
             // Fold shading: brightness modulation for 3D appearance
             float shade = 1.0 - uFoldShading * abs(wrinklePhase) * k * 0.5;

@@ -2963,8 +2963,8 @@ class _TappableSlurpShaderCardState extends State<TappableSlurpShaderCard> {
           onCopyPreset: () => _generatePreset(),
           children: [
             const ControlSectionTitle('Slurp Properties'),
-            ControlSlider.fromRange(range: _ui['radius']!, value: _params.get('radius'), onChanged: (v) => setState(() => _params = _params.withValue('radius', v))),
             ControlSlider.fromRange(range: _ui['gravity']!, value: _params.get('gravity'), onChanged: (v) => setState(() => _params = _params.withValue('gravity', v))),
+            ControlSlider.fromRange(range: _ui['easing']!, value: _params.get('easing'), onChanged: (v) => setState(() => _params = _params.withValue('easing', v))),
             ControlSlider.fromRange(range: _ui['wrinkles']!, value: _params.get('wrinkles'), onChanged: (v) => setState(() => _params = _params.withValue('wrinkles', v))),
             ControlSlider.fromRange(range: _ui['wrinkleDepth']!, value: _params.get('wrinkleDepth'), onChanged: (v) => setState(() => _params = _params.withValue('wrinkleDepth', v))),
             ControlSlider.fromRange(range: _ui['foldShading']!, value: _params.get('foldShading'), onChanged: (v) => setState(() => _params = _params.withValue('foldShading', v))),

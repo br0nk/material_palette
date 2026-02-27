@@ -202,8 +202,8 @@ class _TappableSlurpShaderWrapState
         }
 
         // Slurp parameters
-        uniforms.setFloat(p.get('radius'));
         uniforms.setFloat(p.get('gravity'));
+        uniforms.setFloat(p.get('easing'));
         uniforms.setFloat(p.get('wrinkles'));
         uniforms.setFloat(p.get('wrinkleDepth'));
         uniforms.setFloat(p.get('foldShading'));

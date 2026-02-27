@@ -1070,15 +1070,15 @@ final tappableSlurpShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Tappable slurp has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'radius': 2.41, 'gravity': 2.15,
+      'gravity': 0.3, 'easing': 2.0,
       'wrinkles': 7.23, 'wrinkleDepth': 0.36, 'foldShading': 0.74,
       'speed': 0.70, 'lifetime': 3.0,
     },
     colors: {},
   ),
   uiDefaults: ShaderUIDefaults({
-    'radius': const SliderRange('Radius', min: 0.05, max: 3.0),
-    'gravity': const SliderRange('Gravity', min: 0.5, max: 5.0),
+    'gravity': const SliderRange('Gravity', min: 0.0, max: 1.0),
+    'easing': const SliderRange('Easing', min: 1.0, max: 20.0),
     'wrinkles': const SliderRange('Wrinkles', min: 0.0, max: 20.0),
     'wrinkleDepth': const SliderRange('Wrinkle Depth', min: 0.0, max: 0.5),
     'foldShading': const SliderRange('Fold Shading', min: 0.0, max: 1.0),
