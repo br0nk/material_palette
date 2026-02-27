@@ -189,6 +189,12 @@ abstract class ParamGroups {
     UniformField('gradientOffset'),
   ];
 
+  static const dissolveDirectionFields = [
+    UniformField('angle'),
+    UniformField('scale'),
+    UniformField('offset'),
+  ];
+
   static const commonNoiseFields = [
     UniformField('noiseDensity'),
     UniformField('noiseIntensity'),
@@ -267,6 +273,12 @@ abstract class ParamGroups {
     'gradientCenterY': 0.5,
     'gradientScale': 1.0,
     'gradientOffset': 0.0,
+  };
+
+  static const dissolveDirectionDefaults = {
+    'angle': 90.0,
+    'scale': 1.0,
+    'offset': 0.0,
   };
 
   static const commonNoiseDefaults = {
@@ -348,6 +360,12 @@ abstract class ParamGroups {
     'gradientCenterY': SliderRange('Center Y', min: 0.0, max: 1.0),
     'gradientScale': SliderRange('Scale', min: 0.5, max: 3.0),
     'gradientOffset': SliderRange('Offset', min: -1.0, max: 1.0),
+  };
+
+  static const dissolveDirectionRanges = {
+    'angle': SliderRange('Angle', min: 0.0, max: 360.0),
+    'scale': SliderRange('Scale', min: 0.1, max: 3.0),
+    'offset': SliderRange('Offset', min: -1.0, max: 1.0),
   };
 
   static const commonNoiseRanges = {

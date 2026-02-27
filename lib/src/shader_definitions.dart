@@ -839,7 +839,7 @@ final burnShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Burn has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'dirX': -0.00, 'dirY': 0.06,
+      'angle': 90.0, 'scale': 1.0, 'offset': 0.0,
       'noiseScale': 8.85, 'edgeWidth': 0.18, 'glowIntensity': 3.56,
       'speed': 0.30,
     },
@@ -848,8 +848,7 @@ final burnShaderDef = ShaderDefinition(
     },
   ),
   uiDefaults: ShaderUIDefaults({
-    'dirX': const SliderRange('Direction X', min: -1.0, max: 1.0),
-    'dirY': const SliderRange('Direction Y', min: -1.0, max: 1.0),
+    ...ParamGroups.dissolveDirectionRanges,
     'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
     'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
     'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
@@ -917,7 +916,7 @@ final smokeShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Smoke has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'dirX': -0.00, 'dirY': 0.06,
+      'angle': 90.0, 'scale': 1.0, 'offset': 0.0,
       'noiseScale': 6.0, 'edgeWidth': 0.25, 'glowIntensity': 2.5,
       'speed': 0.20,
     },
@@ -926,8 +925,7 @@ final smokeShaderDef = ShaderDefinition(
     },
   ),
   uiDefaults: ShaderUIDefaults({
-    'dirX': const SliderRange('Direction X', min: -1.0, max: 1.0),
-    'dirY': const SliderRange('Direction Y', min: -1.0, max: 1.0),
+    ...ParamGroups.dissolveDirectionRanges,
     'noiseScale': const SliderRange('Noise Scale', min: 1.0, max: 30.0),
     'edgeWidth': const SliderRange('Edge Width', min: 0.0, max: 1.0),
     'glowIntensity': const SliderRange('Glow Intensity', min: 0.0, max: 5.0),
@@ -995,7 +993,7 @@ final pixelDissolveShaderDef = ShaderDefinition(
   layout: const UniformLayout([]),  // Pixel dissolve has fully manual uniform layout
   defaults: ShaderParams(
     values: {
-      'dirX': 0.41, 'dirY': 0.10,
+      'angle': 14.0, 'scale': 1.0, 'offset': 0.0,
       'pixelSize': 5.11, 'edgeWidth': 0.35,
       'scatter': 0.36, 'noiseAmount': 0.93,
       'speed': 0.21,
@@ -1003,8 +1001,7 @@ final pixelDissolveShaderDef = ShaderDefinition(
     colors: {},
   ),
   uiDefaults: ShaderUIDefaults({
-    'dirX': const SliderRange('Direction X', min: -1.0, max: 1.0),
-    'dirY': const SliderRange('Direction Y', min: -1.0, max: 1.0),
+    ...ParamGroups.dissolveDirectionRanges,
     'pixelSize': const SliderRange('Pixel Size', min: 3.0, max: 30.0),
     'edgeWidth': const SliderRange('Edge Width', min: 0.05, max: 1.0),
     'scatter': const SliderRange('Scatter', min: 0.0, max: 3.0),

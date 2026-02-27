@@ -7,8 +7,9 @@ uniform vec2 uSize;
 uniform float uTime;          // elapsed time in seconds
 
 // Dissolve direction
-uniform float uDirX;
-uniform float uDirY;
+uniform float uAngle;
+uniform float uScale;
+uniform float uOffset;
 
 // Pixel dissolve params
 uniform float uPixelSize;     // size of each pixel block in screen pixels
@@ -41,14 +42,10 @@ void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
     vec2 uv = fragCoord / uSize;
 
-    // Normalize direction
-    vec2 dir = vec2(uDirX, uDirY);
-    float dirLen = length(dir);
-    if (dirLen > 0.0) {
-        dir /= dirLen;
-    } else {
-        dir = vec2(1.0, 0.0);
-    }
+    // Direction from angle (matching gradient shader pattern)
+    float aspect = uSize.x / uSize.y;
+    float rad = uAngle * 3.14159265 / 180.0;
+    vec2 dir = normalize(vec2(cos(rad) / aspect, sin(rad)));
 
     // Progress is now 0-1, computed in Dart
     float progress = uTime;
@@ -56,15 +53,19 @@ void main() {
     // Cell size in UV space
     vec2 cellSizeUV = vec2(uPixelSize) / uSize;
 
-    // Compute gradient range for this direction so the dissolve starts and ends
+    // Compute gradient using centered/scaled UVs
+    float halfSpan = 0.5 * (abs(dir.x) + abs(dir.y)) / uScale;
+    float minGrad = 0.5 + uOffset - halfSpan;
+    float maxGrad = 0.5 + uOffset + halfSpan;
+
+    // Compute sweep range so the dissolve starts and ends
     // fully off-screen (no residual pixels visible at progress 0 or 1).
     float scatterMargin = uScatter * max(cellSizeUV.x, cellSizeUV.y) * 5.0;
     float margin = scatterMargin * 0.6 + uEdgeWidth * 0.5;
 
-    float minBase = min(dir.x, 0.0) + min(dir.y, 0.0);
-    float maxBase = max(dir.x, 0.0) + max(dir.y, 0.0);
-    float offset = margin - minBase;
-    float sweepRange = maxBase - minBase + 2.0 * margin;
+    float sweepStart = minGrad - margin;
+    float sweepEnd = maxGrad + margin;
+    float sweepRange = sweepEnd - sweepStart;
 
     // Check 5x5 neighborhood of cells for scattered pixels that land here
     vec2 currentCell = floor(fragCoord / uPixelSize);
@@ -84,9 +85,9 @@ void main() {
             vec2 cellRand2 = hash22(neighborCell + 127.0);
 
             // Per-cell dissolve threshold along the sweep direction
-            float cellGradient = dot(cellCenterUV, dir);
+            float cellGradient = dot((cellCenterUV - 0.5) / uScale, dir) + 0.5 + uOffset;
             float noiseOffset = (cellRand - 0.5) * uEdgeWidth * uNoiseAmount;
-            float cellThreshold = cellGradient + noiseOffset + offset;
+            float cellThreshold = cellGradient + noiseOffset - sweepStart;
 
             // How far this cell is into its dissolve (0 = solid, 1 = fully gone)
             float cellDissolve = clamp((progress * sweepRange - cellThreshold) / max(uEdgeWidth * 0.5, 0.001), 0.0, 1.0);
@@ -131,9 +132,9 @@ void main() {
     if (bestDepth < 0.0) {
         vec2 cellCenterUV = (currentCell + 0.5) * cellSizeUV;
         float cellRand = hash21(currentCell);
-        float cellGradient = dot(cellCenterUV, dir);
+        float cellGradient = dot((cellCenterUV - 0.5) / uScale, dir) + 0.5 + uOffset;
         float noiseOffset = (cellRand - 0.5) * uEdgeWidth * uNoiseAmount;
-        float cellThreshold = cellGradient + noiseOffset + offset;
+        float cellThreshold = cellGradient + noiseOffset - sweepStart;
         float cellDissolve = clamp((progress * sweepRange - cellThreshold) / max(uEdgeWidth * 0.5, 0.001), 0.0, 1.0);
 
         if (cellDissolve <= 0.0) {

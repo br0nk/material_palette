@@ -49,8 +49,9 @@ class BurnShaderWrap extends StatelessWidget {
         uniforms
           ..setSize(size)
           ..setFloat(progress)
-          ..setFloat(params.get('dirX'))
-          ..setFloat(params.get('dirY'))
+          ..setFloat(params.get('angle'))
+          ..setFloat(params.get('scale'))
+          ..setFloat(params.get('offset'))
           ..setFloat(params.get('noiseScale'))
           ..setFloat(params.get('edgeWidth'))
           ..setFloat(params.get('glowIntensity'))
