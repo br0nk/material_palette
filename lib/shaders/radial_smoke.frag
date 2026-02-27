@@ -73,6 +73,7 @@ void main() {
 
     // Aspect ratio correction for circular burn
     float aspect = uSize.x / uSize.y;
+    vec2 uvAspect = vec2(uv.x * aspect, uv.y);
     vec2 center = vec2(uBurnCenterX, uBurnCenterY);
     vec2 adjustedUV = uv;
     adjustedUV.x = (adjustedUV.x - 0.5) * aspect + 0.5;
@@ -86,7 +87,7 @@ void main() {
     float progress = uTime;
 
     // Burn line: radial distance + turbulence noise distortion
-    float noiseVal = turbulenceNoise(uv * uNoiseScale);
+    float noiseVal = turbulenceNoise(uvAspect * uNoiseScale);
 
     // Compute max radial distance so the burn starts and ends fully
     // off-screen (no residual glow/edge visible at progress 0 or 1).
@@ -112,7 +113,7 @@ void main() {
                * (1.0 - burnMask);
 
     // Modulate glow with noise for organic flicker
-    float glowNoise = turbulenceNoise(uv * uNoiseScale * 2.0 + 42.0);
+    float glowNoise = turbulenceNoise(uvAspect * uNoiseScale * 2.0 + 42.0);
     glow *= 0.5 + 0.5 * glowNoise;
 
     // Smoke color

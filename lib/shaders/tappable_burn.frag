@@ -69,10 +69,11 @@ float fbmNoise(vec2 p) {
 void main() {
     vec2 uv = FlutterFragCoord().xy / uSize;
     float aspect = uSize.x / uSize.y;
+    vec2 uvAspect = vec2(uv.x * aspect, uv.y);
     int clickCount = int(uClickCount);
 
     // Evaluate FBM noise once (position-dependent, not tap-dependent)
-    float noiseVal = fbmNoise(uv * uNoiseScale);
+    float noiseVal = fbmNoise(uvAspect * uNoiseScale);
 
     // Margin so each tap's burn starts and ends fully invisible
     float edgeThickness = 0.03;
@@ -117,7 +118,7 @@ void main() {
                * (1.0 - burnMask);
 
     // Modulate glow with noise for organic flicker
-    float glowNoise = fbmNoise(uv * uNoiseScale * 2.0 + 42.0);
+    float glowNoise = fbmNoise(uvAspect * uNoiseScale * 2.0 + 42.0);
     glow *= 0.5 + 0.5 * glowNoise;
 
     // Fire color

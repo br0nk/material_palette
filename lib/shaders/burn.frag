@@ -73,6 +73,7 @@ void main() {
 
     // Direction from angle (matching gradient shader pattern)
     float aspect = uSize.x / uSize.y;
+    vec2 uvAspect = vec2(uv.x * aspect, uv.y);
     float rad = uAngle * 3.14159265 / 180.0;
     vec2 dir = normalize(vec2(cos(rad) / aspect, sin(rad)));
 
@@ -80,7 +81,7 @@ void main() {
     float progress = uTime;
 
     // Burn line: directional gradient + fbm noise distortion
-    float noiseVal = fbmNoise(uv * uNoiseScale);
+    float noiseVal = fbmNoise(uvAspect * uNoiseScale);
 
     // Compute gradient using centered/scaled UVs
     vec2 centered = (uv - 0.5) / uScale;
@@ -111,7 +112,7 @@ void main() {
                * (1.0 - burnMask);
 
     // Modulate glow with noise for organic flicker
-    float glowNoise = fbmNoise(uv * uNoiseScale * 2.0 + 42.0);
+    float glowNoise = fbmNoise(uvAspect * uNoiseScale * 2.0 + 42.0);
     glow *= 0.5 + 0.5 * glowNoise;
 
     // Fire color
