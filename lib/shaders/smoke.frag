@@ -7,8 +7,9 @@ uniform vec2 uSize;
 uniform float uTime;          // elapsed time in seconds
 
 // Burn direction
-uniform float uDirX;
-uniform float uDirY;
+uniform float uAngle;
+uniform float uScale;
+uniform float uOffset;
 
 // Noise & edge
 uniform float uNoiseScale;
@@ -70,14 +71,10 @@ float turbulenceNoise(vec2 p) {
 void main() {
     vec2 uv = FlutterFragCoord().xy / uSize;
 
-    // Normalize direction
-    vec2 dir = vec2(uDirX, uDirY);
-    float dirLen = length(dir);
-    if (dirLen > 0.0) {
-        dir /= dirLen;
-    } else {
-        dir = vec2(1.0, 0.0);
-    }
+    // Direction from angle (matching gradient shader pattern)
+    float aspect = uSize.x / uSize.y;
+    float rad = uAngle * 3.14159265 / 180.0;
+    vec2 dir = normalize(vec2(cos(rad) / aspect, sin(rad)));
 
     // Progress is now 0-1, computed in Dart
     float progress = uTime;
@@ -85,19 +82,26 @@ void main() {
     // Burn line: directional gradient + turbulence noise distortion
     float noiseVal = turbulenceNoise(uv * uNoiseScale);
 
-    // Compute gradient range for this direction so the burn starts and ends
+    // Compute gradient using centered/scaled UVs
+    vec2 centered = (uv - 0.5) / uScale;
+    float gradient = dot(centered, dir) + 0.5 + uOffset;
+
+    float halfSpan = 0.5 * (abs(dir.x) + abs(dir.y)) / uScale;
+    float minGrad = 0.5 + uOffset - halfSpan;
+    float maxGrad = 0.5 + uOffset + halfSpan;
+
+    // Compute sweep range so the burn starts and ends
     // fully off-screen (no residual glow/edge visible at progress 0 or 1).
     float edgeThickness = 0.03;
     float glowWidth = 0.06;
     float margin = edgeThickness + glowWidth;
 
-    float minBase = min(dir.x, 0.0) + min(dir.y, 0.0);
-    float maxBase = max(dir.x, 0.0) + max(dir.y, 0.0);
-    float offset = margin + uEdgeWidth - minBase;
-    float sweepRange = maxBase - minBase + 2.0 * uEdgeWidth + 2.0 * margin;
+    float sweepStart = minGrad - margin - uEdgeWidth;
+    float sweepEnd = maxGrad + margin + uEdgeWidth;
+    float sweepRange = sweepEnd - sweepStart;
 
-    float d = dot(uv, dir) + uEdgeWidth * (noiseVal - 0.5) * 2.0
-              + offset - progress * sweepRange;
+    float d = gradient + uEdgeWidth * (noiseVal - 0.5) * 2.0
+              - sweepStart - progress * sweepRange;
 
     // Sample child texture
     vec4 tex = texture(uTexture, uv);
