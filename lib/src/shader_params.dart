@@ -295,7 +295,7 @@ abstract class ParamGroups {
   static const noiseDefaults = {
     'noiseIntensity': 0.50,
     'ditherStrength': 0.0,
-    'ditherScale': 0.50,
+    'ditherScale': 1.0,
     'animSpeed': 0.5,
   };
 

@@ -334,12 +334,16 @@ void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
     float time = uTime * uAnimSpeed;
 
-    // Snap to dither pixel grid so each cell outputs one discrete color
-    float cellSize = 1.0 / max(uDitherScale, 0.001);
-    vec2 cellCoord = floor(fragCoord / cellSize);
-    vec2 quantized = (cellCoord + 0.5) * cellSize;
+    // Dither pixel grid: quantize sampling when dither is enabled
+    vec2 sampleCoord = fragCoord;
+    vec2 cellCoord = fragCoord;
+    if (uDitherStrength > 0.0) {
+        float cellSize = 1.0 / max(uDitherScale, 0.001);
+        cellCoord = floor(fragCoord / cellSize);
+        sampleCoord = (cellCoord + 0.5) * cellSize;
+    }
 
-    vec2 uv = quantized / uSize;
+    vec2 uv = sampleCoord / uSize;
     float aspect = uSize.x / uSize.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
 
@@ -360,8 +364,8 @@ void main() {
     float aaFactor = getAASmoothing(uv, uNoiseScale);
     noise = mix(noise, smoothstep(0.0, 1.0, noise), aaFactor);
 
-    // Add ordered dither
-    float dither = orderedDither(cellCoord) * uDitherStrength * 0.05;
+    // Add ordered dither (skip sampling when disabled)
+    float dither = uDitherStrength > 0.0 ? orderedDither(cellCoord) * uDitherStrength * 0.05 : 0.0;
 
     // Modulate gradient with noise (attenuated at edges)
     float noiseMod = (noise - 0.5) * 2.0 * uNoiseIntensity * edgeAtten;
