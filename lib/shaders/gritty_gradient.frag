@@ -14,7 +14,9 @@ uniform float uGradientOffset;     // Shift gradient position (-1 to 1)
 // Noise settings
 uniform float uNoiseDensity;       // Stipple density (higher = finer grain)
 uniform float uNoiseIntensity;     // How much noise affects the color (0-1)
+uniform float uStippleStrength;    // How much stipple noise is added (0=none, 1=full)
 uniform float uDitherStrength;     // Dithering at color boundaries (0-1)
+uniform float uDitherScale;        // Dither sampling scale (lower = more pixelated)
 
 // Animation
 uniform float uAnimSpeed;          // Noise animation speed
@@ -83,29 +85,28 @@ float stippleNoise(vec2 p, float time) {
     return stipple1 * 0.6 + stipple2 * 0.25 + stipple3 * 0.15;
 }
 
-// Dither pattern for smoother color transitions
+// Proper 4x4 Bayer ordered dither (16 distinct thresholds)
 float orderedDither(vec2 p) {
-    // 4x4 Bayer matrix approximation
-    vec2 grid = mod(floor(p), 4.0);
-    float dither = mod(grid.x + grid.y * 2.0, 4.0) / 4.0;
-    return (dither - 0.5) * 2.0;
+    vec2 cell = mod(floor(p), 4.0);
+    // Decompose into two 2x2 levels of the recursive Bayer pattern
+    float bx0 = mod(cell.x, 2.0);
+    float by0 = mod(cell.y, 2.0);
+    float bx1 = floor(cell.x / 2.0);
+    float by1 = floor(cell.y / 2.0);
+    float fine   = mod(bx0 * 2.0 + by0 * 3.0, 4.0);
+    float coarse = mod(bx1 * 2.0 + by1 * 3.0, 4.0);
+    float bayer = (fine * 4.0 + coarse + 0.5) / 16.0;
+    return (bayer - 0.5) * 2.0;
 }
 
-// Combined gritty texture
-float grittyTexture(vec2 fragCoord, float time, float gradientT) {
-    // Scale coordinates for stipple density
-    vec2 p = fragCoord * uNoiseDensity / 100.0;
+// Combined gritty texture — all lookups use the quantized cell coordinate
+// so every screen pixel in the same dither cell gets identical values.
+float grittyTexture(vec2 cellCoord, float time) {
+    float stipple = stippleNoise(cellCoord * uNoiseDensity / 100.0, time);
+    float dither = orderedDither(cellCoord) * uDitherStrength * 0.1;
 
-    // Get base stipple noise
-    float stipple = stippleNoise(p, time);
-
-    // Add ordered dither near gradient boundaries for smoother transitions
-    float dither = orderedDither(fragCoord * 0.5) * uDitherStrength * 0.1;
-
-    // Combine stipple with subtle dither
-    float grit = stipple + dither;
-
-    return grit;
+    // Mix between neutral (0.5) and stipple; at strength 0 only dither contributes
+    return mix(0.5, stipple, uStippleStrength) + dither;
 }
 
 // ============ GRADIENT FUNCTION ============
@@ -203,14 +204,17 @@ vec4 grittyGradientColor(float gradientT, float noise) {
 
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
-    vec2 uv = fragCoord / uSize;
     float time = uTime * uAnimSpeed;
 
-    // Calculate gradient position (0 to 1 across the gradient direction)
-    float gradientT = calculateGradient(uv);
+    // Snap to dither pixel grid so each cell outputs one discrete color
+    float cellSize = 1.0 / max(uDitherScale, 0.001);
+    vec2 cellCoord = floor(fragCoord / cellSize);
+    vec2 quantized = (cellCoord + 0.5) * cellSize;
 
-    // Generate stipple noise
-    float grit = grittyTexture(fragCoord, time, gradientT);
+    // All sampling uses the quantized coordinate
+    vec2 uv = quantized / uSize;
+    float gradientT = calculateGradient(uv);
+    float grit = grittyTexture(cellCoord, time);
 
     // Get color with gritty/stippled transition (premultiplied alpha)
     vec4 pmColor = grittyGradientColor(gradientT, grit);

@@ -30,7 +30,8 @@ final grittyGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 110.41, 'gradientScale': 0.60, 'gradientOffset': -0.38,
-      'noiseDensity': 160.70, 'noiseIntensity': 0.65, 'ditherStrength': 0.44,
+      'noiseDensity': 160.70, 'noiseIntensity': 0.65,
+      'stippleStrength': 1.0, 'ditherStrength': 0.44, 'ditherScale': 0.50,
       'animSpeed': 0.0,
       'colorCount': 2.0, 'softness': 1.0,
       'exposure': 1.0, 'contrast': 1.0,
@@ -65,7 +66,8 @@ final radialGrittyGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.17, 'gradientCenterY': 0.03,
       'gradientScale': 1.29, 'gradientOffset': -0.32,
-      'noiseDensity': 800.0, 'noiseIntensity': 0.35, 'ditherStrength': 0.50,
+      'noiseDensity': 800.0, 'noiseIntensity': 0.35,
+      'stippleStrength': 1.0, 'ditherStrength': 0.50, 'ditherScale': 0.50,
       'animSpeed': 0.0,
       'colorCount': 3.0, 'softness': 1.0,
       'exposure': 1.0, 'contrast': 1.0,
