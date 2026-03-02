@@ -1,3 +1,11 @@
+## 0.8.0
+
+- Add tappable slurp shader with gravity, wrinkle, and fold shading controls.
+- Replace dirX/dirY with angle-based direction controls for burn, smoke, and pixel dissolve shaders.
+- Simplify marble smear shader by internalizing lighting constants and cleaning up color roles.
+- Fix aspect ratio handling in burn, smoke, and wrap shaders.
+- Add shader presets and easing controls to the example app.
+
 ## 0.7.0
 
 - Support for implicit animations of shader params.
