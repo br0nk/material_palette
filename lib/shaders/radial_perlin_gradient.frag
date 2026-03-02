@@ -14,6 +14,7 @@ uniform float uGradientOffset;     // Shift gradient position (-1 to 1)
 // Noise settings
 uniform float uNoiseIntensity;     // How much noise affects the gradient (0-1)
 uniform float uDitherStrength;     // Dithering at color boundaries (0-1)
+uniform float uDitherScale;        // Dither sampling scale (lower = more pixelated)
 
 // Animation
 uniform float uAnimSpeed;          // Noise animation speed
@@ -177,10 +178,17 @@ float animatedPerlin(vec2 p, float time) {
 
 // ============ DITHER ============
 
+// Proper 4x4 Bayer ordered dither (16 distinct thresholds)
 float orderedDither(vec2 p) {
-    vec2 grid = mod(floor(p), 4.0);
-    float dither = mod(grid.x + grid.y * 2.0, 4.0) / 4.0;
-    return (dither - 0.5) * 2.0;
+    vec2 cell = mod(floor(p), 4.0);
+    float bx0 = mod(cell.x, 2.0);
+    float by0 = mod(cell.y, 2.0);
+    float bx1 = floor(cell.x / 2.0);
+    float by1 = floor(cell.y / 2.0);
+    float fine   = mod(bx0 * 2.0 + by0 * 3.0, 4.0);
+    float coarse = mod(bx1 * 2.0 + by1 * 3.0, 4.0);
+    float bayer = (fine * 4.0 + coarse + 0.5) / 16.0;
+    return (bayer - 0.5) * 2.0;
 }
 
 // ============ RADIAL GRADIENT FUNCTION ============
@@ -309,10 +317,16 @@ vec3 applyLighting(vec3 color, vec3 normal) {
 
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
-    vec2 uv = fragCoord / uSize;
+    float time = uTime * uAnimSpeed;
+
+    // Snap to dither pixel grid so each cell outputs one discrete color
+    float cellSize = 1.0 / max(uDitherScale, 0.001);
+    vec2 cellCoord = floor(fragCoord / cellSize);
+    vec2 quantized = (cellCoord + 0.5) * cellSize;
+
+    vec2 uv = quantized / uSize;
     float aspect = uSize.x / uSize.y;
     vec2 uvAspect = vec2(uv.x * aspect, uv.y);
-    float time = uTime * uAnimSpeed;
 
     // Calculate base radial gradient position
     float gradientT = calculateRadialGradient(uv);
@@ -336,7 +350,7 @@ void main() {
     noise = mix(noise, smoothstep(0.0, 1.0, noise), aaFactor);
 
     // Add ordered dither for smoother transitions
-    float dither = orderedDither(fragCoord * 0.5) * uDitherStrength * 0.05;
+    float dither = orderedDither(cellCoord) * uDitherStrength * 0.05;
 
     // Modulate gradient with noise (attenuated at edges)
     float noiseMod = (noise - 0.5) * 2.0 * uNoiseIntensity * edgeAtten;

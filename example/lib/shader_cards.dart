@@ -809,6 +809,7 @@ class _PerlinGradientShaderCardState extends State<PerlinGradientShaderCard> {
               onChanged: (v) => setState(() => _params = _params.withValue('edgeFadeMode', v)),
             ),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             const SizedBox(height: 12),
             const ControlSectionTitle('Animation'),
             ControlSlider.fromRange(range: _ui['animSpeed']!, value: _params.get('animSpeed'), onChanged: (v) => setState(() => _params = _params.withValue('animSpeed', v))),
@@ -905,6 +906,7 @@ class _RadialPerlinGradientShaderCardState extends State<RadialPerlinGradientSha
             ControlSlider.fromRange(range: _ui['noiseContrast']!, value: _params.get('noiseContrast'), onChanged: (v) => setState(() => _params = _params.withValue('noiseContrast', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1013,6 +1015,7 @@ class _SimplexGradientShaderCardState extends State<SimplexGradientShaderCard> {
             ControlSlider.fromRange(range: _ui['sharpness']!, value: _params.get('sharpness'), onChanged: (v) => setState(() => _params = _params.withValue('sharpness', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1120,6 +1123,7 @@ class _RadialSimplexGradientShaderCardState extends State<RadialSimplexGradientS
             ControlSlider.fromRange(range: _ui['sharpness']!, value: _params.get('sharpness'), onChanged: (v) => setState(() => _params = _params.withValue('sharpness', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1230,6 +1234,7 @@ class _FbmGradientShaderCardState extends State<FbmGradientShaderCard> {
             ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1339,6 +1344,7 @@ class _RadialFbmGradientShaderCardState extends State<RadialFbmGradientShaderCar
             ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1447,6 +1453,7 @@ class _TurbulenceGradientShaderCardState extends State<TurbulenceGradientShaderC
             ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1555,6 +1562,7 @@ class _RadialTurbulenceGradientShaderCardState extends State<RadialTurbulenceGra
             ControlSlider.fromRange(range: _ui['noiseScale']!, value: _params.get('noiseScale'), onChanged: (v) => setState(() => _params = _params.withValue('noiseScale', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1666,6 +1674,7 @@ class _VoronoiGradientShaderCardState extends State<VoronoiGradientShaderCard> {
             ControlSlider.fromRange(range: _ui['cellSmoothness']!, value: _params.get('cellSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('cellSmoothness', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1776,6 +1785,7 @@ class _RadialVoronoiGradientShaderCardState extends State<RadialVoronoiGradientS
             ControlSlider.fromRange(range: _ui['cellSmoothness']!, value: _params.get('cellSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('cellSmoothness', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1885,6 +1895,7 @@ class _VoronoiseGradientShaderCardState extends State<VoronoiseGradientShaderCar
             ControlSlider.fromRange(range: _ui['edgeSmoothness']!, value: _params.get('edgeSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('edgeSmoothness', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',
@@ -1993,6 +2004,7 @@ class _RadialVoronoiseGradientShaderCardState extends State<RadialVoronoiseGradi
             ControlSlider.fromRange(range: _ui['edgeSmoothness']!, value: _params.get('edgeSmoothness'), onChanged: (v) => setState(() => _params = _params.withValue('edgeSmoothness', v))),
             ControlSlider.fromRange(range: _ui['noiseIntensity']!, value: _params.get('noiseIntensity'), onChanged: (v) => setState(() => _params = _params.withValue('noiseIntensity', v))),
             ControlSlider.fromRange(range: _ui['ditherStrength']!, value: _params.get('ditherStrength'), onChanged: (v) => setState(() => _params = _params.withValue('ditherStrength', v))),
+            ControlSlider.fromRange(range: _ui['ditherScale']!, value: _params.get('ditherScale'), onChanged: (v) => setState(() => _params = _params.withValue('ditherScale', v))),
             ControlSlider.fromRange(range: _ui['edgeFade']!, value: _params.get('edgeFade'), onChanged: (v) => setState(() => _params = _params.withValue('edgeFade', v))),
             ControlSegmentedButton<double>(
               label: 'Fade Mode',

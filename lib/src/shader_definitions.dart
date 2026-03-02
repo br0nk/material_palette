@@ -105,7 +105,7 @@ final perlinGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 110.03, 'gradientScale': 1.20, 'gradientOffset': 0.0,
-      'noiseIntensity': 0.46, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.46, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.91,
       'noiseScale': 12.6, 'noiseContrast': 3.00,
       'colorCount': 3.0, 'softness': 1.0,
@@ -154,7 +154,7 @@ final radialPerlinGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.61, 'gradientCenterY': 0.26,
       'gradientScale': 1.47, 'gradientOffset': 0.0,
-      'noiseIntensity': 0.57, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.57, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.86,
       'noiseScale': 24.0, 'noiseContrast': 0.66,
       'colorCount': 3.0, 'softness': 1.0,
@@ -202,7 +202,7 @@ final simplexGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 158.56, 'gradientScale': 0.94, 'gradientOffset': 0.0,
-      'noiseIntensity': 0.32, 'ditherStrength': 0.25,
+      'noiseIntensity': 0.32, 'ditherStrength': 0.25, 'ditherScale': 0.50,
       'animSpeed': 0.35,
       'noiseScale': 8.0, 'sharpness': 2.20,
       'colorCount': 3.0, 'softness': 1.0,
@@ -251,7 +251,7 @@ final radialSimplexGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.40, 'gradientCenterY': 0.50,
       'gradientScale': 0.75, 'gradientOffset': -0.42,
-      'noiseIntensity': 0.36, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.36, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.35,
       'noiseScale': 19.2, 'sharpness': 1.27,
       'colorCount': 3.0, 'softness': 1.0,
@@ -301,7 +301,7 @@ final fbmGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 124.86, 'gradientScale': 1.0, 'gradientOffset': 0.0,
-      'noiseIntensity': 0.88, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.88, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.33,
       'octaves': 5.0, 'lacunarity': 2.10, 'persistence': 0.50, 'noiseScale': 4.5,
       'colorCount': 3.0, 'softness': 1.0,
@@ -354,7 +354,7 @@ final radialFbmGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.74, 'gradientCenterY': 1.00,
       'gradientScale': 1.96, 'gradientOffset': -0.43,
-      'noiseIntensity': 0.38, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.38, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.30,
       'octaves': 6.12, 'lacunarity': 1.93, 'persistence': 0.53, 'noiseScale': 6.4,
       'colorCount': 3.0, 'softness': 1.0,
@@ -405,7 +405,7 @@ final turbulenceGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 267.09, 'gradientScale': 1.14, 'gradientOffset': 0.09,
-      'noiseIntensity': 0.51, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.51, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.50,
       'octaves': 2.00, 'baseFrequency': 0.81, 'noiseScale': 2.9,
       'colorCount': 3.0, 'softness': 1.0,
@@ -456,7 +456,7 @@ final radialTurbulenceGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.24, 'gradientCenterY': 0.27,
       'gradientScale': 2.03, 'gradientOffset': -0.02,
-      'noiseIntensity': 0.51, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.51, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.75,
       'octaves': 3.02, 'baseFrequency': 1.94, 'noiseScale': 3.9,
       'colorCount': 3.0, 'softness': 1.0,
@@ -508,7 +508,7 @@ final voronoiGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 84.68, 'gradientScale': 0.73, 'gradientOffset': 0.22,
-      'noiseIntensity': 0.12, 'ditherStrength': 0.02,
+      'noiseIntensity': 0.12, 'ditherStrength': 0.02, 'ditherScale': 0.50,
       'animSpeed': 0.5,
       'cellScale': 20.3, 'cellJitter': 1.0, 'distanceType': 0.45,
       'outputMode': 0.0, 'cellSmoothness': 0.54,
@@ -565,7 +565,7 @@ final radialVoronoiGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.50, 'gradientCenterY': 0.36,
       'gradientScale': 0.80, 'gradientOffset': 0.0,
-      'noiseIntensity': 0.26, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.26, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.5,
       'cellScale': 14.8, 'cellJitter': 0.07, 'distanceType': 0.0,
       'outputMode': 0.0, 'cellSmoothness': 0.50,
@@ -619,7 +619,7 @@ final voronoiseGradientDef = ShaderDefinition(
   defaults: ShaderParams(
     values: {
       'gradientAngle': 171.90, 'gradientScale': 0.68, 'gradientOffset': -0.07,
-      'noiseIntensity': 0.55, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.55, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.00,
       'cellScale': 37.8, 'noiseBlend': 0.38, 'edgeSmoothness': 0.11,
       'colorCount': 2.0, 'softness': 1.0,
@@ -670,7 +670,7 @@ final radialVoronoiseGradientDef = ShaderDefinition(
     values: {
       'gradientCenterX': 0.46, 'gradientCenterY': 0.69,
       'gradientScale': 0.80, 'gradientOffset': -0.42,
-      'noiseIntensity': 0.34, 'ditherStrength': 0.0,
+      'noiseIntensity': 0.34, 'ditherStrength': 0.0, 'ditherScale': 0.50,
       'animSpeed': 0.0,
       'cellScale': 14.6, 'noiseBlend': 0.07, 'edgeSmoothness': 0.29,
       'colorCount': 3.0, 'softness': 1.0,
