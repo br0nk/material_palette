@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_palette/material_palette.dart';
 
+import 'gallery_page.dart';
 import 'shader_cards.dart';
 
 void main() {
@@ -127,6 +128,16 @@ class _ShaderCarouselPageState extends State<ShaderCarouselPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.grid_view),
+            tooltip: 'Preset Gallery',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GalleryPage()),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
