@@ -393,7 +393,7 @@ abstract class ParamGroups {
     'noiseIntensity': SliderRange('Intensity', min: 0.0, max: 1.0),
     'stippleStrength': SliderRange('Stipple', min: 0.0, max: 1.0),
     'ditherStrength': SliderRange('Dither', min: 0.0, max: 5.0),
-    'ditherScale': SliderRange('Dither Scale', min: 0.01, max: 1.0),
+    'ditherScale': SliderRange('Noise Scale', min: 0.01, max: 1.0),
     'animSpeed': SliderRange('Speed', min: 0.0, max: 2.0),
   };
 
