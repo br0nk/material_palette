@@ -25,14 +25,12 @@ class _GalleryPageState extends State<GalleryPage> {
 
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
-      final offset = _scrollController.offset + event.scrollDelta.dy * 3;
-      final clamped = offset.clamp(
-        _scrollController.position.minScrollExtent,
-        _scrollController.position.maxScrollExtent,
-      );
+      final pos = _scrollController.position;
+      final target = (_scrollController.offset + event.scrollDelta.dy * 8)
+          .clamp(pos.minScrollExtent, pos.maxScrollExtent);
       _scrollController.animateTo(
-        clamped,
-        duration: const Duration(milliseconds: 400),
+        target,
+        duration: const Duration(milliseconds: 800),
         curve: Curves.easeOutCubic,
       );
     }
@@ -55,7 +53,7 @@ class _GalleryPageState extends State<GalleryPage> {
         onPointerSignal: _onPointerSignal,
         child: GridView.builder(
           controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
