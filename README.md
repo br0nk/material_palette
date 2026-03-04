@@ -4,7 +4,7 @@
 
 A collection of **material effects** implemented with shaders for Flutter.
 
-[**Live Demo**](https://br0nk.github.io/material_palette/)
+[**Live Demo**](https://flutterflow.github.io/material_palette/)
 
 ## Gen1 Materials
 
