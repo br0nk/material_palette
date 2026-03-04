@@ -1,3 +1,9 @@
+## 1.0.1
+
+- Transfer org ownership and update repository URLs.
+- Add preset swatches to the example app.
+- Update shader presets and definitions.
+
 ## 1.0.0
 
 - Fix dithering for gritty gradient and radial gritty gradient shaders.
