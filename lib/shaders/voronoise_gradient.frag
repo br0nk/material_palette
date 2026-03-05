@@ -12,12 +12,7 @@ uniform float uGradientScale;
 uniform float uGradientOffset;
 
 // Noise settings
-uniform float uNoiseIntensity;
-uniform float uDitherStrength;
-uniform float uDitherScale;        // Dither sampling scale (lower = more pixelated)
-
-// Animation
-uniform float uAnimSpeed;
+uniform vec4 uNoiseParams; // x=noiseIntensity, y=ditherStrength, z=ditherScale, w=animSpeed
 
 // Voronoise-specific
 uniform float uCellScale;
@@ -35,24 +30,15 @@ uniform vec4 uColor6;
 uniform vec4 uColor7;
 uniform vec4 uColor8;
 uniform vec4 uColor9;
-uniform float uColorCount;
-uniform float uSoftness;
+uniform vec2 uColorMeta; // x=colorCount, y=softness
 
 // Post-processing
-uniform float uExposure;
-uniform float uContrast;
+uniform vec2 uPostProcess; // x=exposure, y=contrast
 
 // Lighting uniforms
-uniform float uBumpStrength;
-uniform vec3 uLightDir;
-uniform float uLightIntensity;
-uniform float uAmbient;
-uniform float uSpecular;
-uniform float uShininess;
-uniform float uMetallic;           // 0=dielectric, 1=metal
-uniform float uRoughness;          // 0=mirror, 1=matte
-uniform float uEdgeFade;           // Edge attenuation for noise/bump
-uniform float uEdgeFadeMode;       // 0=both, 1=start only, 2=end only
+uniform vec4 uLighting1; // x=bumpStrength, yzw=lightDir
+uniform vec4 uLighting2; // x=lightIntensity, y=ambient, z=specular, w=shininess
+uniform vec4 uLighting3; // x=metallic, y=roughness, z=edgeFade, w=edgeFadeMode
 
 out vec4 fragColor;
 
@@ -182,7 +168,7 @@ vec4 getColorStop(int i) {
 }
 
 vec4 gradientColor(float t) {
-    int count = int(uColorCount);
+    int count = int(uColorMeta.x);
     if (count < 2) count = 2; if (count > 10) count = 10;
     float stopT = t * float(count - 1);
     int idx = int(floor(stopT));
@@ -192,9 +178,9 @@ vec4 gradientColor(float t) {
     vec3 linA = srgbToLinear(sA.rgb); vec3 linB = srgbToLinear(sB.rgb);
     vec4 pmA = vec4(linA * sA.a, sA.a); vec4 pmB = vec4(linB * sB.a, sB.a);
     float blend;
-    if (uSoftness >= 0.999) { blend = frac; }
-    else if (uSoftness <= 0.001) { blend = step(0.5, frac); }
-    else { float edge = 0.5 * uSoftness; blend = smoothstep(0.5 - edge, 0.5 + edge, frac); }
+    if (uColorMeta.y >= 0.999) { blend = frac; }
+    else if (uColorMeta.y <= 0.001) { blend = step(0.5, frac); }
+    else { float edge = 0.5 * uColorMeta.y; blend = smoothstep(0.5 - edge, 0.5 + edge, frac); }
     return mix(pmA, pmB, blend);
 }
 
@@ -218,42 +204,42 @@ vec3 computeNormal(vec2 uv, float time, float bumpStrength) {
 // ============ LIGHTING ============
 
 vec3 applyLighting(vec3 color, vec3 normal) {
-    if (uBumpStrength < 0.001) return color;
+    if (uLighting1.x < 0.001) return color;
 
-    vec3 lightDir = normalize(uLightDir);
+    vec3 lightDir = normalize(uLighting1.yzw);
     vec3 viewDir = vec3(0.0, 0.0, 1.0);
 
-    float roughness2 = uRoughness * uRoughness;
-    float effectiveShininess = mix(uShininess, 2.0, roughness2);
+    float roughness2 = uLighting3.y * uLighting3.y;
+    float effectiveShininess = mix(uLighting2.w, 2.0, roughness2);
 
-    vec3 specularColor = mix(vec3(1.0), color, uMetallic);
-    float diffuseFactor = 1.0 - uMetallic * 0.9;
+    vec3 specularColor = mix(vec3(1.0), color, uLighting3.x);
+    float diffuseFactor = 1.0 - uLighting3.x * 0.9;
 
-    vec3 ambient = color * uAmbient;
+    vec3 ambient = color * uLighting2.y;
 
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = color * diff * (1.0 - uAmbient) * diffuseFactor;
+    vec3 diffuse = color * diff * (1.0 - uLighting2.y) * diffuseFactor;
 
     vec3 halfDir = normalize(lightDir + viewDir);
     float NdotH = max(dot(normal, halfDir), 0.0);
     float specIntensity = mix(1.0, 0.2, roughness2);
     float spec = pow(NdotH, effectiveShininess) * specIntensity;
-    vec3 specular = specularColor * spec * uSpecular;
+    vec3 specular = specularColor * spec * uLighting2.z;
 
-    return (ambient + diffuse + specular) * uLightIntensity;
+    return (ambient + diffuse + specular) * uLighting2.x;
 }
 
 // ============ MAIN ============
 
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
-    float time = uTime * uAnimSpeed * 0.02;
+    float time = uTime * uNoiseParams.w * 0.02;
 
     // Dither pixel grid: quantize sampling when dither is enabled
     vec2 sampleCoord = fragCoord;
     vec2 cellCoord = fragCoord;
-    if (uDitherStrength > 0.0) {
-        float cellSize = 1.0 / max(uDitherScale, 0.001);
+    if (uNoiseParams.y > 0.0) {
+        float cellSize = 1.0 / max(uNoiseParams.z, 0.001);
         cellCoord = floor(fragCoord / cellSize);
         sampleCoord = (cellCoord + 0.5) * cellSize;
     }
@@ -264,7 +250,7 @@ void main() {
 
     // Calculate base gradient position
     float gradientT = calculateGradient(uv);
-    float edgeAtten = edgeAttenuation(gradientT, uEdgeFade, uEdgeFadeMode);
+    float edgeAtten = edgeAttenuation(gradientT, uLighting3.z, uLighting3.w);
 
     // Generate Voronoise
     vec2 noiseCoord = uvAspect * uCellScale;
@@ -277,10 +263,10 @@ void main() {
     noise = mix(noise, smoothstep(0.0, 1.0, noise), aaFactor);
 
     // Add ordered dither (skip sampling when disabled)
-    float dither = uDitherStrength > 0.0 ? orderedDither(cellCoord) * uDitherStrength * 0.05 : 0.0;
+    float dither = uNoiseParams.y > 0.0 ? orderedDither(cellCoord) * uNoiseParams.y * 0.05 : 0.0;
 
     // Modulate gradient with noise
-    float noiseMod = (noise - 0.5) * 2.0 * uNoiseIntensity * edgeAtten;
+    float noiseMod = (noise - 0.5) * 2.0 * uNoiseParams.x * edgeAtten;
     float noisyT = clamp(gradientT + noiseMod + dither, 0.0, 1.0);
 
     // Get gradient color (premultiplied alpha)
@@ -289,15 +275,15 @@ void main() {
     vec3 color = alpha > 0.001 ? pmColor.rgb / alpha : vec3(0.0);
 
     // Compute normal and apply lighting
-    float attenuatedBump = uBumpStrength * edgeAtten;
+    float attenuatedBump = uLighting1.x * edgeAtten;
     vec3 normal = computeNormal(uvAspect, time, attenuatedBump);
     color = applyLighting(color, normal);
 
     // Apply contrast
-    color = mix(vec3(0.5), color, uContrast);
+    color = mix(vec3(0.5), color, uPostProcess.y);
 
     // Apply exposure
-    color *= uExposure;
+    color *= uPostProcess.x;
 
     // Clamp to [0,1] before sRGB conversion
     color = clamp(color, 0.0, 1.0);

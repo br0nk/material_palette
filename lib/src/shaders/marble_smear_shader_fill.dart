@@ -36,7 +36,7 @@ class MarbleSmearShaderFill extends StatefulWidget {
   final List<ShaderSmudgeData>? smudges;
   final ShaderSmudgeData? activeSmudge;
 
-  static const int maxSmudges = 10;
+  static const int maxSmudges = 3;
   static const double smudgeLifetime = 8.0;
 
   static Future<void> precacheShader() =>
@@ -124,10 +124,13 @@ class _MarbleSmearShaderFillState extends State<MarbleSmearShaderFill> {
       allSmudges.add(activeSmudge);
     }
 
-    // Smudge count
+    // Smudge meta: count, time0, time1, time2 (packed vec4)
     shader.setFloat(idx++, allSmudges.length.toDouble());
+    for (int i = 0; i < MarbleSmearShaderFill.maxSmudges; i++) {
+      shader.setFloat(idx++, i < allSmudges.length ? allSmudges[i].elapsed : 0.0);
+    }
 
-    // Smudge data: 10 smudges x (startX, startY, endX, endY, time) = 50 floats
+    // Smudge positions: 3 smudges x (startX, startY, endX, endY) (packed vec4 each)
     for (int i = 0; i < MarbleSmearShaderFill.maxSmudges; i++) {
       if (i < allSmudges.length) {
         final smudge = allSmudges[i];
@@ -135,9 +138,7 @@ class _MarbleSmearShaderFillState extends State<MarbleSmearShaderFill> {
         shader.setFloat(idx++, smudge.startPosition.dy);
         shader.setFloat(idx++, smudge.endPosition.dx);
         shader.setFloat(idx++, smudge.endPosition.dy);
-        shader.setFloat(idx++, smudge.elapsed);
       } else {
-        shader.setFloat(idx++, 0.0);
         shader.setFloat(idx++, 0.0);
         shader.setFloat(idx++, 0.0);
         shader.setFloat(idx++, 0.0);
