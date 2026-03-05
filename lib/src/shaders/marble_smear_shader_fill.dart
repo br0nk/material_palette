@@ -64,6 +64,10 @@ class _MarbleSmearShaderFillState extends State<MarbleSmearShaderFill> {
     final size = Size(widget.width, widget.height);
     final normalizedPos = _normalizePosition(event.localPosition, size);
     setState(() {
+      // Evict oldest completed smudges to guarantee a slot for the active one.
+      while (_smudges.length >= MarbleSmearShaderFill.maxSmudges) {
+        _smudges.removeAt(0);
+      }
       _activeSmudge = ShaderSmudgeData(
         startPosition: normalizedPos,
         endPosition: normalizedPos,
@@ -118,10 +122,15 @@ class _MarbleSmearShaderFillState extends State<MarbleSmearShaderFill> {
     final mergedParams = widget.params.withColor('bgColor', bgColor);
     int idx = setShaderUniforms(shader, size, time, mergedParams, marbleSmearShaderDef.layout);
 
-    // Build combined list of smudges (completed + active)
+    // Build combined list of smudges (completed + active), treating the slots
+    // as a circular buffer: evict the oldest completed smudges when needed so
+    // the active touch is always visible.
     final allSmudges = <ShaderSmudgeData>[...smudges];
     if (activeSmudge != null) {
       allSmudges.add(activeSmudge);
+    }
+    while (allSmudges.length > MarbleSmearShaderFill.maxSmudges) {
+      allSmudges.removeAt(0);
     }
 
     // Smudge meta: count, time0, time1, time2 (packed vec4)
