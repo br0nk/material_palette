@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_palette/material_palette.dart';
@@ -15,27 +14,6 @@ class GalleryPage extends StatefulWidget {
 }
 
 class _GalleryPageState extends State<GalleryPage> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onPointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent) {
-      final pos = _scrollController.position;
-      final target = (_scrollController.offset + event.scrollDelta.dy * 8)
-          .clamp(pos.minScrollExtent, pos.maxScrollExtent);
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeOutCubic,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -49,25 +27,20 @@ class _GalleryPageState extends State<GalleryPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: Listener(
-        onPointerSignal: _onPointerSignal,
-        child: GridView.builder(
-          controller: _scrollController,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-          ),
-          itemCount: galleryPresets.length,
-          itemBuilder: (context, index) {
-            return _GallerySwatch(
-              preset: galleryPresets[index],
-              size: swatchSize,
-            );
-          },
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
         ),
+        itemCount: galleryPresets.length,
+        itemBuilder: (context, index) {
+          return _GallerySwatch(
+            preset: galleryPresets[index],
+            size: swatchSize,
+          );
+        },
       ),
     );
   }
